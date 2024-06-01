@@ -42,10 +42,12 @@ architecture Behavioral of UART is
     component UART_transmitter is
         Port
         (
+            baud_ref   : in  std_logic;
+            clock      : in  std_logic;
+            reset      : in  std_logic;
             Tx_write   : in  std_logic;
             Tx_Ready   : out std_logic;
             Tx_Data    : in  std_logic_vector(7 downto 0);
-            baud_ref   : in  std_logic;
             TxD        : out std_logic;
             reset      : in  std_logic
         );
@@ -75,10 +77,12 @@ architecture Behavioral of UART is
         
         transmitter: UART_transmitter port map
             (
+                clock    => clk_100MHz,
+                baud_ref => baudrate16,
+                reset    => reset,
                 Tx_write => Tx_write,
                 Tx_Ready => Tx_Ready,
                 Tx_Data  => Tx_Data,
-                baud_ref => baudrate16,
                 TxD      => TxD,
                 reset    => reset
             );
