@@ -1,0 +1,2 @@
+INFO: [VRFC 10-163] Analyzing VHDL file "D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/baudrate_generator_tb.vhd" into library xil_defaultlib
+INFO: [VRFC 10-3107] analyzing entity 'baudrate_generator_tb'
