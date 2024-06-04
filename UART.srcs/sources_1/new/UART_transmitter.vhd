@@ -10,7 +10,8 @@ entity UART_transmitter is
         reset      : in  std_logic;
         Tx_write   : in  std_logic;
         Tx_Ready   : out std_logic;                     -- in from the user
-        Tx_Data    : in  std_logic_vector(7 downto 0);
+        -- Tx_Data    : in  std_logic_vector(7 downto 0);  -- this is what was asked of us, but I do not see any way for data to be inserted in parallel
+        Tx_Data    : in  std_logic;
         TxD        : out std_logic
     );
 end UART_transmitter;
@@ -58,7 +59,7 @@ architecture Behavioral of UART_transmitter is
                             next_state <= TX_idle;
                         end if;
                     when TX_wait_to_write =>
-                        if count = 16 and baud_ref = '1'
+                        if count = 16 and baud_ref = '1' then
                             next_state <= TX_write_SIPO;
                         else
                             next_state <= TX_wait_to_write;
@@ -84,7 +85,7 @@ architecture Behavioral of UART_transmitter is
                     when others =>
                         next_state <= TX_idle;
                 end case;
-        end proces state_logic;
+        end process state_logic;
 
         -- take_sample: process (baud_ref) is
         --     begin
