@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------------------------------------------------------------
--- Serial Input - Parallel Output register of width bits
+-- Serial Input - Parallel Output register of 8 bits
 --
 -- Uses the baud16_generator as clock
 -- With proper signals it can take and store samples sequentially, like a shift register, every 16 baud16 ticks
@@ -16,7 +16,6 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity SIPO is
-    generic (width : positive := 8);
     port
     (
         baud_clk: in std_logic;         -- this must come from baud
@@ -24,7 +23,7 @@ entity SIPO is
         start   : in std_logic;         -- start filling the SIPO, must remain '1' or SIPO will not fill. If it fills fetch data when ready = '1', if you set start = '0' SIPO empties and waits new data
         ready   : out std_logic;        -- signal that SIPO is ready. If you want to fetch 
         s_in    : in std_logic;
-        p_out   : out std_logic_vector(width-1 downto 0)
+        p_out   : out std_logic_vector(7 downto 0)
     );
 end SIPO;
 
@@ -35,7 +34,7 @@ architecture Behavioral of SIPO is
     signal baud_tick    : std_logic := '0';     -- mod 16 tick, that is defined by baud_count
     signal ready_int    : std_logic := '0';     -- if '1' SIPO is full and ready to read
     signal data_in      : std_logic := 'X';     -- internal signal to manage the incoming data
-    signal shift_reg    : std_logic_vector(width-1 downto 0) := (others => '0'); -- internal signal to manage contents of SIPO
+    signal shift_reg    : std_logic_vector(7 downto 0) := (others => '0'); -- internal signal to manage contents of SIPO
 
     begin
 
@@ -72,11 +71,11 @@ architecture Behavioral of SIPO is
                     shift_reg <= (others => '0');
                 else
                     if start = '1' and ready_int = '0' and baud_tick = '1' then
-                        if fill = width then
+                        if fill = 8 then
                             ready_int <= '1';
                             fill <= 0;
                         else
-                            shift_reg <= data_in & shift_reg(width-1 downto 1);
+                            shift_reg <= data_in & shift_reg(7 downto 1);
                             fill <= fill + 1;
                         end if;
                     elsif start = '0' then
