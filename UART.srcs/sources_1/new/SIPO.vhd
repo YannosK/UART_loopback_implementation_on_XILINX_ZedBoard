@@ -52,7 +52,7 @@ architecture Behavioral of SIPO is
                         if baud_count /= 15 then                -- ATTENTION: not sure if it must be 15 or 16
                             baud_count <= baud_count + 1;
                             baud_tick <= '0';
-                        elsif baud_count = 1 then
+                        elsif baud_count = 15 then
                             baud_count <= 0;
                             baud_tick <= '1';
                         else

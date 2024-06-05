@@ -48,12 +48,20 @@ architecture Behavioral of UART_receiver is
         RX_idle,
         RX_start_check,
         RX_data_fetch,
-        RX_check_stop,
+        RX_stop_check,
         RX_FIFO_write
     );
 
-    signal current_state    : FSM_states;
+    signal current_state    : FSM_states := RX_idle;
     signal next_state       : FSM_states;
+
+    signal baud_count   : integer := 0;                 -- mod 16 counter to define sample moment
+    signal fill_SIPO    : std_logic := '0';             -- signal to start filling SIPO from RxD. Connects to 'start' of SIPO
+    signal filled_SIPO  : std_logic;                    -- signal that SIPO filled up
+    signal data_internal: std_logic_vector(7 downto 0); -- data passed around from SIPO to FIFO
+    signal full_FIFO    : std_logic;                    -- It is '1' if FIFO is completely filled. Connects to 'full' of FIFO
+    signal write_FIFO   : std_logic;                    -- Set '1' to write to FIFO. Connects to 'wr_en' in FIFO
+    signal empty_FIFO   : std_logic;                    -- If '1' FIFO is completely empty (no read allowed). Connects to 'empty' in FIFO
 
     begin
 
@@ -61,45 +69,102 @@ architecture Behavioral of UART_receiver is
                 (
                     clk   => clock,
                     srst  => reset,
-                    din   => ,
-                    wr_en => ,
-                    rd_en => ,
+                    din   => data_internal,
+                    wr_en => write_FIFO,
+                    rd_en => RX_Read,           -- you have to make sure in the other side, that FIFO is not empty, and you don't read something empty
                     dout  => Rx_Data,
-                    full  => ,
-                    empty => 
+                    full  => full_FIFO,
+                    empty => empty_FIFO
                 );
 
         RX_SIPO: SIPO port map
                 (
                     baud_clk => baud_ref,
                     reset    => reset,
-                    start    => ,
-                    ready    => ,
+                    start    => fill_SIPO,
+                    ready    => filled_SIPO,
                     s_in     => RxD,
-                    p_out    => 
+                    p_out    => data_internal
                 );
+
+        RX_Valid <= not empty_FIFO;
 
         state_reg: process (clock) is
             begin
                 if rising_edge(clock) then
                     if reset = '1' then
-                        current_state <= TX_idle;
+                        current_state <= RX_idle;
                     else
                         current_state <= next_state;
                     end if;
                 end if;
         end process state_reg;
         
-        state_logic: process (clock, current_state) is
+        state_logic: process (clock, current_state, baud_ref, RxD) is
+            variable temp_state : FSM_states;
             begin
                 case current_state is
                     when RX_idle        =>
+                        temp_state := RX_idle; 
+                        fill_SIPO <= '0';
+                        write_FIFO <= '0';
+                        baud_count <= 0;
+                        if falling_edge(RxD) then
+                            temp_state := RX_start_check;
+                        end if;
+                        if temp_state = RX_start_check then
+                            next_state <= RX_start_check;
+                        else
+                            next_state <= RX_idle;
+                        end if;
                     when RX_start_check =>
+                        if rising_edge(baud_ref) then
+                            if baud_count = 15 then         -- ATTENTION: not sure if it must be 15 or 16
+                                baud_count <= 0;
+                                if RxD = '0' then
+                                    next_state <= RX_data_fetch;
+                                else
+                                    next_state <= RX_idle;
+                                end if;
+                            else
+                                baud_count <= baud_count + 1;
+                                next_state <= RX_start_check;
+                            end if;
+                        else                                -- ATTENTION: not sure if correct
+                            next_state <= RX_start_check;
+                        end if;
                     when RX_data_fetch  =>
-                    when RX_check_stop  =>
+                        fill_SIPO <= '1';
+                        if filled_SIPO = '1' then
+                            next_state <= RX_stop_check;
+                        else
+                            next_state <= RX_data_fetch;
+                        end if;
+                    when RX_stop_check  =>
+                        if rising_edge(baud_ref) then
+                            if baud_count = 15 then         -- ATTENTION: not sure if it must be 15 or 16
+                                baud_count <= 0;
+                                if RxD = '1' then
+                                    next_state <= RX_FIFO_write;
+                                else
+                                    next_state <= RX_idle;
+                                end if;
+                            else
+                                baud_count <= baud_count + 1;
+                                next_state <= RX_stop_check;
+                            end if;
+                        else                                -- ATTENTION: not sure if correct
+                            next_state <= RX_stop_check;
+                        end if;
                     when RX_FIFO_write  =>
+                        if full_FIFO = '1' then
+                            next_state <= RX_idle;
+                        else
+                            write_FIFO <= '1';               -- ATTENTION: not sure if it has enough time, for data to go through
+                            next_state <= RX_idle;
+                        end if;
                     when others =>
-                        next_state <= TX_idle;
+                        next_state <= RX_idle;
                 end case;
         end process state_logic;
 
