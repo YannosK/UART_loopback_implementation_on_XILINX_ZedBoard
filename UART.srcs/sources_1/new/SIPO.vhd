@@ -9,6 +9,10 @@
 --  + ready (out): signals that SIPO is empty and ready to be written
 --  + start (in): when set to '1' SIPO fills up, until full. As long as it is full and it remains '1', data are available at p_out
 --  + reset (in): resets every process going on
+--
+-- NOTES
+--  + baud_clk is the clock for the module. reset is asynchronous
+--  + when start = '1' and then '0', it takes one cycle for it to make output zero
 -------------------------------------------------------------------------------------------------------------------------------------
 
 library IEEE;
@@ -48,7 +52,7 @@ architecture Behavioral of SIPO is
                     baud_count <= 0;
                     baud_tick <= '0';
                 else
-                    if rising_edge(baud_clk) then
+                    if rising_edge(baud_clk) and start = '1' then
                         if baud_count /= 15 then                -- ATTENTION: not sure if it must be 15 or 16
                             baud_count <= baud_count + 1;
                             baud_tick <= '0';
@@ -70,18 +74,20 @@ architecture Behavioral of SIPO is
                     ready_int <= '0';
                     shift_reg <= (others => '0');
                 else
-                    if start = '1' and ready_int = '0' and baud_tick = '1' then
-                        if fill = 8 then
-                            ready_int <= '1';
-                            fill <= 0;
-                        else
-                            shift_reg <= data_in & shift_reg(7 downto 1);
-                            fill <= fill + 1;
-                        end if;
-                    elsif start = '0' then
-                        ready_int <= '0';
-                        shift_reg <= (others => '0');
-                    end if;                                 -- this if statement will probably produce a latch, but I think we want that
+                    if rising_edge(baud_clk) then
+                        if start = '1' and ready_int = '0' and baud_tick = '1' then
+                            if fill = 8 then
+                                ready_int <= '1';
+                                fill <= 0;
+                            else
+                                shift_reg <= data_in & shift_reg(7 downto 1);
+                                fill <= fill + 1;
+                            end if;
+                        elsif start = '0' then
+                            ready_int <= '0';
+                            shift_reg <= (others => '0');
+                        end if;                                 -- this if statement will probably produce a latch, but I think we want that
+                    end if;
                 end if;
         end process SIPO_fill;
 
