@@ -149,7 +149,14 @@ architecture Behavioral of UART_receiver is
                                 temp_state := RX_start_check;
                             end if;
                         end if;
-                        next_state <= temp_state;           -- ATTENTION: not sure if you can pass a variable to a signal
+                        -- next_state <= temp_state;           -- ATTENTION: not sure if you can pass a variable to a signal
+                        if temp_state = RX_data_fetch then
+                            next_state <= RX_data_fetch;
+                        elsif temp_state = RX_start_check then
+                            next_state <= RX_start_check;
+                        else
+                            next_state <= RX_idle;
+                        end if;
                     when RX_data_fetch  =>
                         fill_SIPO <= '1';
                         if filled_SIPO = '1' then
@@ -172,7 +179,14 @@ architecture Behavioral of UART_receiver is
                                 temp_state := RX_stop_check;
                             end if;
                         end if;
-                        next_state <= temp_state;
+                        -- next_state <= temp_state;           -- ATTENTION: not sure you can do that
+                        if temp_state = RX_FIFO_write then
+                            next_state <= RX_FIFO_write;
+                        elsif temp_state = RX_start_check then
+                            next_state <= RX_stop_check;
+                        else
+                            next_state <= RX_idle;
+                        end if;
                     when RX_FIFO_write  =>
                         if full_FIFO = '1' then
                             next_state <= RX_idle;
