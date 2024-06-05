@@ -32,7 +32,7 @@ architecture Behavioral of SIPO is
 
     signal fill         : integer := 0;         -- counter to count if SIPO is filled
     signal baud_count   : integer := 0;         -- mod 16 counter to define sample moment
-    signal baud_tick    : std_logic := '0';         -- mod 16 tick, that is defined by baud_count
+    signal baud_tick    : std_logic := '0';     -- mod 16 tick, that is defined by baud_count
     signal ready_int    : std_logic := '0';     -- if '1' SIPO is full and ready to read
     signal data_in      : std_logic := 'X';     -- internal signal to manage the incoming data
     signal shift_reg    : std_logic_vector(width-1 downto 0) := (others => '0'); -- internal signal to manage contents of SIPO

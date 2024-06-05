@@ -18,6 +18,19 @@ end UART_transmitter;
 
 architecture Behavioral of UART_transmitter is
 
+    component fifo_generator_0 IS
+      PORT (
+        clk : IN STD_LOGIC;
+        srst : IN STD_LOGIC;
+        din : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+        wr_en : IN STD_LOGIC;
+        rd_en : IN STD_LOGIC;
+        dout : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+        full : OUT STD_LOGIC;
+        empty : OUT STD_LOGIC
+      );
+    END component fifo_generator_0;
+
     signal count        : integer := 0;
     signal SIPO_full    : std_logic := 'X';     -- if '1' SIPO content can be passed to FIFO
     signal stop_check   : std_logic := 'X';     -- if '1' stop bit was correct
