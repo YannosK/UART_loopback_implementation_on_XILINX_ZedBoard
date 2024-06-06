@@ -25,33 +25,32 @@ end entity UART;
 
 architecture Behavioral of UART is
 
-    signal baudrate16 : std_logic;
-
     component UART_receiver is
         Port
         (
+            clock      : in  std_logic;
+            reset      : in  std_logic;
+            baud_ref   : in  std_logic;
             Rx_Read    : in  std_logic;
             Rx_Valid   : out std_logic;
             Rx_Data    : out std_logic_vector(7 downto 0);
-            baud_ref   : in  std_logic;
-            RxD        : in  std_logic;
-            reset      : in  std_logic
+            RxD        : in  std_logic
         );
     end component UART_receiver;
 
-    component UART_transmitter is
-        Port
-        (
-            baud_ref   : in  std_logic;
-            clock      : in  std_logic;
-            reset      : in  std_logic;
-            Tx_write   : in  std_logic;
-            Tx_Ready   : out std_logic;
-            Tx_Data    : in  std_logic_vector(7 downto 0);
-            TxD        : out std_logic;
-            reset      : in  std_logic
-        );
-    end component    UART_transmitter;
+    -- component UART_transmitter is
+    --     Port
+    --     (
+    --         baud_ref   : in  std_logic;
+    --         clock      : in  std_logic;
+    --         reset      : in  std_logic;
+    --         Tx_write   : in  std_logic;
+    --         Tx_Ready   : out std_logic;
+    --         Tx_Data    : in  std_logic_vector(7 downto 0);
+    --         TxD        : out std_logic;
+    --         reset      : in  std_logic
+    --     );
+    -- end component    UART_transmitter;
     
     component baudrate_generator is
         generic (baudRate : integer := 115200);
@@ -63,29 +62,32 @@ architecture Behavioral of UART is
         );
     end component baudrate_generator;
     
+    signal baudrate16 : std_logic;
+    
     begin
 
         receiver: UART_receiver port map
             (
+                clock    => clk_100MHz,
+                reset    => reset,
+                baud_ref => baudrate16, 
                 Rx_Read  => Rx_Read,
                 Rx_Valid => Rx_Valid,
                 Rx_Data  => Rx_Data,
-                baud_ref => baudrate16,
-                RxD      => RxD,
-                reset    => reset
+                RxD      => RxD      
             );
         
-        transmitter: UART_transmitter port map
-            (
-                clock    => clk_100MHz,
-                baud_ref => baudrate16,
-                reset    => reset,
-                Tx_write => Tx_write,
-                Tx_Ready => Tx_Ready,
-                Tx_Data  => Tx_Data,
-                TxD      => TxD,
-                reset    => reset
-            );
+        -- transmitter: UART_transmitter port map
+        --     (
+        --         clock    => clk_100MHz,
+        --         baud_ref => baudrate16,
+        --         reset    => reset,
+        --         Tx_write => Tx_write,
+        --         Tx_Ready => Tx_Ready,
+        --         Tx_Data  => Tx_Data,
+        --         TxD      => TxD,
+        --         reset    => reset
+        --     );
 
         baud16_generator: baudrate_generator
             generic map

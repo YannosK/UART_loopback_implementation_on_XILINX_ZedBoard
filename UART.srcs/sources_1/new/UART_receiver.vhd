@@ -17,16 +17,6 @@ end UART_receiver;
 
 architecture Behavioral of UART_receiver is
 
-    -- component baudrate_generator is
-    --     generic (baudRate : integer := 115200);
-    --     Port 
-    --     (
-    --         clock       : in std_logic;
-    --         en_16x_baud : out std_logic;
-    --         reset       : in std_logic
-    --     );
-    -- end component baudrate_generator;
-    
     component fifo_generator_0 is
       port 
       (
@@ -67,10 +57,6 @@ architecture Behavioral of UART_receiver is
     signal current_state    : FSM_states := RX_idle;
     signal next_state       : FSM_states;
 
-    -- signal start_RX     : std_logic := '1';             -- 
-    -- signal start_baud   : std_logic := '0';             -- signal to start the baud16 counter
-    -- signal baud_tick    : std_logic := '0';             -- becomes '1' if the counter counted to 16
-    -- signal baud_internal: std_logic;                    -- internal signal of baud, produced by the generator and routed to SIPO 
     signal baud_count   : integer := 0;                 -- mod 16 counter to define sample moment
     signal fill_SIPO    : std_logic := '0';             -- signal to start filling SIPO from RxD. Connects to 'start' of SIPO
     signal filled_SIPO  : std_logic;                    -- signal that SIPO filled up
@@ -84,14 +70,6 @@ architecture Behavioral of UART_receiver is
         -----------------------------------------------------------------------------------------------------------------
         -- modules
         -----------------------------------------------------------------------------------------------------------------
-
-        -- baud16: baudrate_generator generic map (baudRate => baud)
-        --         port map
-        --         (
-        --             clock       => clock,
-        --             en_16x_baud => baud_internal,
-        --             reset       => reset       
-        --         );
 
         RX_FIFO: fifo_generator_0 port map
                 (
@@ -125,8 +103,6 @@ architecture Behavioral of UART_receiver is
         -- processes
         -----------------------------------------------------------------------------------------------------------------
 
-        -- baud_counter: process(baud_ref)
-
         state_reg: process (clock, reset) is
             begin
                 if reset = '1' then
@@ -139,7 +115,6 @@ architecture Behavioral of UART_receiver is
         end process state_reg;
         
         state_logic: process (clock, current_state, baud_ref, RxD, filled_SIPO, full_FIFO) is
-            -- variable temp_state : FSM_states;
             variable lock       : std_logic := '0';         -- I hope this works - not become '0' with every process activation
             begin
                 case current_state is
