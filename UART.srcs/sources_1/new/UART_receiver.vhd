@@ -139,43 +139,40 @@ architecture Behavioral of UART_receiver is
         end process state_reg;
         
         state_logic: process (clock, current_state, baud_ref, RxD, filled_SIPO, full_FIFO) is
-            variable temp_state : FSM_states;
+            -- variable temp_state : FSM_states;
+            variable lock       : std_logic := '0';         -- I hope this works - not become '0' with every process activation
             begin
                 case current_state is
                     when RX_idle        =>
-                        temp_state := RX_idle; 
                         fill_SIPO <= '0';
-                        write_FIFO <= '0';
+                        write_FIFO <= '0';                  -- WARNING: somehow a latch is produced
                         baud_count <= 0;
-                        if RxD = '0' and RxD'event then
-                            temp_state := RX_start_check;
-                        end if;
-                        if temp_state = RX_start_check then
+                        if RxD = '0' then
                             next_state <= RX_start_check;
                         else
                             next_state <= RX_idle;
                         end if;
                     when RX_start_check =>
-                        temp_state := RX_start_check;
-                        if baud_ref = '1' and baud_ref'event then
+                        if baud_ref = '1' and lock = '0' then
+                            lock := '1';
                             if baud_count = 7 then
                                 baud_count <= 0;
                                 if RxD = '0' then
-                                    temp_state := RX_data_fetch;
+                                    lock := '0';
+                                    next_state <= RX_data_fetch;
                                 else
-                                    temp_state := RX_idle;
+                                    lock := '0';
+                                    next_state <= RX_idle;
                                 end if;
                             else
                                 baud_count <= baud_count + 1;
-                                temp_state := RX_start_check;
+                                next_state <= RX_start_check;
                             end if;
-                        end if;
-                        if temp_state = RX_data_fetch then
-                            next_state <= RX_data_fetch;
-                        elsif temp_state = RX_start_check then
+                        elsif baud_ref = '0' and lock ='1' then
+                            lock := '0';
                             next_state <= RX_start_check;
                         else
-                            next_state <= RX_idle;
+                            next_state <= RX_start_check;
                         end if;
                     when RX_data_fetch  =>
                         fill_SIPO <= '1';
@@ -185,26 +182,26 @@ architecture Behavioral of UART_receiver is
                             next_state <= RX_data_fetch;
                         end if;
                     when RX_stop_check  =>                      -- ASSUMING: only 1 stop bit
-                        temp_state := RX_stop_check;
-                        if baud_ref = '1' and baud_ref'event then
+                        if baud_ref = '1' and lock = '0' then
+                            lock := '1';
                             if baud_count = 15 then
                                 baud_count <= 0;
                                 if RxD = '1' then
-                                    temp_state := RX_FIFO_write;
+                                    lock := '0';
+                                    next_state <= RX_FIFO_write;
                                 else
-                                    temp_state := RX_idle;
+                                    lock := '0';
+                                    next_state <= RX_idle;
                                 end if;
                             else
                                 baud_count <= baud_count + 1;
-                                temp_state := RX_stop_check;
+                                next_state <= RX_stop_check;
                             end if;
-                        end if;
-                        if temp_state = RX_FIFO_write then
-                            next_state <= RX_FIFO_write;
-                        elsif temp_state = RX_start_check then
+                        elsif baud_ref = '0' and lock = '1' then
+                            lock := '0';
                             next_state <= RX_stop_check;
                         else
-                            next_state <= RX_idle;
+                            next_state <= RX_stop_check;
                         end if;
                     when RX_FIFO_write  =>
                         if full_FIFO = '1' then
