@@ -25,7 +25,7 @@ architecture Behavioral of baudrate_generator is
         cycles(5 downto 0) <= "110110";
         cycles(12 downto 6) <= (others => '0'); 
 
-        baud_tick: process (clock) is
+        baud_tick: process (clock, reset) is
             begin
                 if reset = '1' then
                     count_up <= 0;

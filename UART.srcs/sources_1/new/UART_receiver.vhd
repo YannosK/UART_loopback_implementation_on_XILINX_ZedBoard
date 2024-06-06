@@ -16,6 +16,16 @@ entity UART_receiver is
 end UART_receiver;
 
 architecture Behavioral of UART_receiver is
+
+    -- component baudrate_generator is
+    --     generic (baudRate : integer := 115200);
+    --     Port 
+    --     (
+    --         clock       : in std_logic;
+    --         en_16x_baud : out std_logic;
+    --         reset       : in std_logic
+    --     );
+    -- end component baudrate_generator;
     
     component fifo_generator_0 is
       port 
@@ -52,13 +62,16 @@ architecture Behavioral of UART_receiver is
         RX_FIFO_write
     );
 
+    constant baud : integer := 115200;
+
     signal current_state    : FSM_states := RX_idle;
     signal next_state       : FSM_states;
 
     -- signal start_RX     : std_logic := '1';             -- 
-    signal start_baud   : std_logic := '0';             -- signal to start the baud16 counter
+    -- signal start_baud   : std_logic := '0';             -- signal to start the baud16 counter
+    -- signal baud_tick    : std_logic := '0';             -- becomes '1' if the counter counted to 16
+    -- signal baud_internal: std_logic;                    -- internal signal of baud, produced by the generator and routed to SIPO 
     signal baud_count   : integer := 0;                 -- mod 16 counter to define sample moment
-    signal baud_tick    : std_logic := '0';             -- becomes '1' if the counter counted to 16
     signal fill_SIPO    : std_logic := '0';             -- signal to start filling SIPO from RxD. Connects to 'start' of SIPO
     signal filled_SIPO  : std_logic;                    -- signal that SIPO filled up
     signal data_internal: std_logic_vector(7 downto 0); -- data passed around from SIPO to FIFO
@@ -71,6 +84,14 @@ architecture Behavioral of UART_receiver is
         -----------------------------------------------------------------------------------------------------------------
         -- modules
         -----------------------------------------------------------------------------------------------------------------
+
+        -- baud16: baudrate_generator generic map (baudRate => baud)
+        --         port map
+        --         (
+        --             clock       => clock,
+        --             en_16x_baud => baud_internal,
+        --             reset       => reset       
+        --         );
 
         RX_FIFO: fifo_generator_0 port map
                 (
@@ -106,18 +127,18 @@ architecture Behavioral of UART_receiver is
 
         -- baud_counter: process(baud_ref)
 
-        state_reg: process (clock) is
+        state_reg: process (clock, reset) is
             begin
-                if rising_edge(clock) then
-                    if reset = '1' then
-                        current_state <= RX_idle;
-                    else
+                if reset = '1' then
+                    current_state <= RX_idle;
+                else
+                    if rising_edge(clock) then
                         current_state <= next_state;
                     end if;
                 end if;
         end process state_reg;
         
-        state_logic: process (clock, current_state, baud_ref, RxD) is
+        state_logic: process (clock, current_state, baud_ref, RxD, filled_SIPO, full_FIFO) is
             variable temp_state : FSM_states;
             begin
                 case current_state is
@@ -137,7 +158,7 @@ architecture Behavioral of UART_receiver is
                     when RX_start_check =>
                         temp_state := RX_start_check;
                         if baud_ref = '1' and baud_ref'event then
-                            if baud_count = 15 then         -- ATTENTION: not sure if it must be 15 or 16
+                            if baud_count = 7 then
                                 baud_count <= 0;
                                 if RxD = '0' then
                                     temp_state := RX_data_fetch;
@@ -149,7 +170,6 @@ architecture Behavioral of UART_receiver is
                                 temp_state := RX_start_check;
                             end if;
                         end if;
-                        -- next_state <= temp_state;           -- ATTENTION: not sure if you can pass a variable to a signal
                         if temp_state = RX_data_fetch then
                             next_state <= RX_data_fetch;
                         elsif temp_state = RX_start_check then
@@ -164,10 +184,10 @@ architecture Behavioral of UART_receiver is
                         else
                             next_state <= RX_data_fetch;
                         end if;
-                    when RX_stop_check  =>
+                    when RX_stop_check  =>                      -- ASSUMING: only 1 stop bit
                         temp_state := RX_stop_check;
                         if baud_ref = '1' and baud_ref'event then
-                            if baud_count = 15 then         -- ATTENTION: not sure if it must be 15 or 16
+                            if baud_count = 15 then
                                 baud_count <= 0;
                                 if RxD = '1' then
                                     temp_state := RX_FIFO_write;
@@ -179,7 +199,6 @@ architecture Behavioral of UART_receiver is
                                 temp_state := RX_stop_check;
                             end if;
                         end if;
-                        -- next_state <= temp_state;           -- ATTENTION: not sure you can do that
                         if temp_state = RX_FIFO_write then
                             next_state <= RX_FIFO_write;
                         elsif temp_state = RX_start_check then
