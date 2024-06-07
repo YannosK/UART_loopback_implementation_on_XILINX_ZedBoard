@@ -1,6 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
--- use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 USE std.env.all;
 
 entity UART_tb is
@@ -30,18 +30,22 @@ architecture Behavioral of UART_tb is
     end component UART;
 
     signal clk_100MHz : std_logic;
-    signal reset      : std_logic;
-    signal Rx_Read    : std_logic;
+    signal reset      : std_logic := '1';
+    signal Rx_Read    : std_logic := '0';
     signal Rx_Valid   : std_logic;
     signal Rx_Data    : std_logic_vector(7 downto 0);
     signal Tx_write   : std_logic;
     signal Tx_Ready   : std_logic;
     signal Tx_Data    : std_logic_vector(7 downto 0);
-    signal RxD        : std_logic;
+    signal RxD        : std_logic := '1';
     signal TxD        : std_logic;
 
-    constant baud       : integer := 115200;
-    constant clk_period : time := 10 ns;
+    signal incoming_symbol : std_logic_vector(9 downto 0) := "1010101010";
+
+    constant baud           : integer := 115200;
+    constant clk_period     : time := 10 ns;
+    constant baud16_period  : time := 550 ns;
+    constant baud_period    : time := 8800 ns;
 
     begin
 
@@ -70,6 +74,29 @@ architecture Behavioral of UART_tb is
 
             testbench: process is
                 begin
+                    
+                    reset <= '1';
+                    wait for 2*baud16_period;
+                    reset <= '0';
+                    wait for 2*baud16_period;
+
+                    report "Incoming symbol arrives";
+
+                    for I in 0 to 9 loop
+                        RxD <= incoming_symbol(I);
+                        wait for baud_period;
+                    end loop;
+
+                    report "Successfully received";
+
+                    wait for 2*baud_period;
+
+                    stop;
+                    
             end process testbench;
 
 end Behavioral;
+
+
+
+-- assert seven_segment=response(i) report "SEVEN SEGMENT OUTPUT FOR INPUT WITH INTEGER VALUE=" & integer'image(i) & " IS WRONG! " severity FAILURE;

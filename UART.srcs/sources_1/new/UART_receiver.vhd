@@ -119,6 +119,7 @@ architecture Behavioral of UART_receiver is
             begin
                 case current_state is
                     when RX_idle        =>
+                        lock := '0';
                         fill_SIPO <= '0';
                         write_FIFO <= '0';                  -- WARNING: somehow a latch is produced
                         baud_count <= 0;
@@ -133,39 +134,36 @@ architecture Behavioral of UART_receiver is
                             if baud_count = 7 then
                                 baud_count <= 0;
                                 if RxD = '0' then
-                                    lock := '0';
                                     next_state <= RX_data_fetch;
                                 else
-                                    lock := '0';
                                     next_state <= RX_idle;
                                 end if;
                             else
                                 baud_count <= baud_count + 1;
                                 next_state <= RX_start_check;
                             end if;
-                        elsif baud_ref = '0' and lock ='1' then
+                        elsif baud_ref = '0' and lock = '1' then
                             lock := '0';
                             next_state <= RX_start_check;
-                        else
+                        elsif baud_ref = '0' and lock = '0' then
                             next_state <= RX_start_check;
-                        end if;
+                        end if;                             -- Latch will be produced - not sure if it can be avoided
                     when RX_data_fetch  =>
+                        lock := '0';
                         fill_SIPO <= '1';
                         if filled_SIPO = '1' then
                             next_state <= RX_stop_check;
                         else
                             next_state <= RX_data_fetch;
                         end if;
-                    when RX_stop_check  =>                      -- ASSUMING: only 1 stop bit
+                    when RX_stop_check  =>                  -- ASSUMING: only 1 stop bit
                         if baud_ref = '1' and lock = '0' then
                             lock := '1';
                             if baud_count = 15 then
                                 baud_count <= 0;
                                 if RxD = '1' then
-                                    lock := '0';
                                     next_state <= RX_FIFO_write;
                                 else
-                                    lock := '0';
                                     next_state <= RX_idle;
                                 end if;
                             else
@@ -175,14 +173,15 @@ architecture Behavioral of UART_receiver is
                         elsif baud_ref = '0' and lock = '1' then
                             lock := '0';
                             next_state <= RX_stop_check;
-                        else
+                        elsif baud_ref = '0' and lock = '0' then
                             next_state <= RX_stop_check;
-                        end if;
+                        end if;                             -- Latch will be produced - not sure if it can be avoided
                     when RX_FIFO_write  =>
+                        lock := '0';
                         if full_FIFO = '1' then
                             next_state <= RX_idle;
                         else
-                            write_FIFO <= '1';               -- ATTENTION: not sure if it has enough time, for data to go through
+                            write_FIFO <= '1';              -- In sim it shows that it takes one cycle to write and four cycles to propagate to output
                             next_state <= RX_idle;
                         end if;
                     when others =>
