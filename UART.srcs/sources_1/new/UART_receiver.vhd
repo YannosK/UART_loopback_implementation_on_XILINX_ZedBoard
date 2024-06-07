@@ -123,7 +123,6 @@ architecture Behavioral of UART_receiver is
                         baud_count <= 0;
                         fill_SIPO <= '0';
                         write_FIFO <= '0';                  -- WARNING: somehow a latch is produced
-                        baud_count <= 0;
                         if RxD = '0' then
                             next_state <= RX_start_check;
                         else
