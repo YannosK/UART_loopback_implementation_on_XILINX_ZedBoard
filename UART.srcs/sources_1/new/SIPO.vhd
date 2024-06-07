@@ -78,7 +78,6 @@ architecture Behavioral of SIPO is
                         if start = '1' and ready_int = '0' and baud_tick = '1' then
                             if fill = 7 then
                                 shift_reg <= data_in & shift_reg(7 downto 1);
-                                fill <= fill + 1;
                                 fill <= 0;
                                 ready_int <= '1';
                             else

@@ -143,6 +143,7 @@ architecture Behavioral of UART_receiver is
                                 next_state <= RX_start_check;
                             end if;
                         elsif baud_ref = '1' and lock = '1' then
+                            lock := lock;
                             if baud_count = 7 then
                                 if RxD = '0' then
                                     next_state <= RX_data_fetch;
@@ -156,6 +157,7 @@ architecture Behavioral of UART_receiver is
                             lock := '0';
                             next_state <= RX_start_check;
                         else
+                            lock := lock;
                             next_state <= RX_start_check;
                         end if;
                     when RX_data_fetch  =>
@@ -181,6 +183,7 @@ architecture Behavioral of UART_receiver is
                                 next_state <= RX_stop_check;
                             end if;
                         elsif baud_ref = '1' and lock = '1' then
+                            lock := lock;
                             if baud_count = 15 then
                                 if RxD = '1' then
                                     next_state <= RX_FIFO_write;
@@ -194,6 +197,7 @@ architecture Behavioral of UART_receiver is
                             lock := '0';
                             next_state <= RX_stop_check;
                         else
+                            lock := lock;
                             next_state <= RX_stop_check;
                         end if;
                     when RX_FIFO_write  =>
@@ -206,6 +210,7 @@ architecture Behavioral of UART_receiver is
                             next_state <= RX_idle;
                         end if;
                     when others =>
+                        lock := lock;
                         next_state <= RX_idle;
                 end case;
         end process state_logic;
