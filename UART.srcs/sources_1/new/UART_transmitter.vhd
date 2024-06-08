@@ -31,37 +31,15 @@ architecture Behavioral of UART_transmitter is
       );
     end component fifo_generator_0;
 
-    component SIPO is
-        port
-        (
-            baud_clk: in std_logic;
-            reset   : in std_logic;
-            start   : in std_logic;
-            ready   : out std_logic;
-            s_in    : in std_logic;
-            p_out   : out std_logic_vector(7 downto 0)
-        );
-    end component SIPO;
-
-    component baud16_counter is
-        port
-        (
-            baud_clk    : in std_logic;
-            reset       : in std_logic;
-            start       : in std_logic;
-            half_ready  : out std_logic;
-            ready       : out std_logic
-        );
-    end component baud16_counter;
-
     type FSM_states is 
     (
-        RX_idle,
-        RX_start_check,
-        RX_data_fetch,
-        RX_stop_check,
-        RX_FIFO_write
+        TX_idle,
+        TX_PISO_fill,
+        TX_data_send
     );
+
+    signal current_state    : FSM_states := TX_idle;
+    signal next_state       : FSM_states;
 
     -- signal start_counter: std_logic := '0';             -- signal to start the baud16 counter module
     -- signal half_ready   : std_logic;                    -- signal that the counter counted to 8 
@@ -101,6 +79,33 @@ architecture Behavioral of UART_transmitter is
         -- processes
         -----------------------------------------------------------------------------------------------------------------
 
+        state_reg: process (clock, reset) is
+            begin
+                if reset = '1' then
+                    current_state <= TX_idle;
+                else
+                    if rising_edge(clock) then
+                        current_state <= next_state;
+                    end if;
+                end if;
+        end process state_reg;
+        
+        -- state_logic: process (current_state, half_ready, ready, RxD, filled_SIPO, full_FIFO) is
+        state_logic: process (current_state, empty_FIFO) is
+            begin
+                case current_state is
+                    when TX_idle        =>
+                        if empty_FIFO = '0' then
+                            next_state <= TX_PISO_fill;
+                        else
+                            next_state <= TX_idle;
+                        end if;
+                    when TX_PISO_fill   =>
+                    when TX_data_send   =>
+                    when others =>
+                        next_state <= TX_idle;
+                end case;
+        end process state_logic;
 
 
 end Behavioral;

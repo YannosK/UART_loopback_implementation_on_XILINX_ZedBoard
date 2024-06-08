@@ -136,7 +136,6 @@ architecture Behavioral of UART_receiver is
                 end if;
         end process state_reg;
         
-        -- state_logic: process (clock, current_state, baud_ref, RxD, filled_SIPO, full_FIFO) is
         state_logic: process (current_state, half_ready, ready, RxD, filled_SIPO, full_FIFO) is
             begin
                 start_counter <= '0';
