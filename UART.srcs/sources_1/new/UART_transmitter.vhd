@@ -30,6 +30,19 @@ architecture Behavioral of UART_transmitter is
         empty   : OUT STD_LOGIC
       );
     end component fifo_generator_0;
+    
+    component PISO is
+        port
+        (
+            baud_clk : in std_logic;
+            reset    : in std_logic;
+            start    : in std_logic;
+            ready    : out std_logic;
+            p_in     : in std_logic_vector(7 downto 0);
+            s_out    : out std_logic
+        );
+    end component PISO;
+    
 
     type FSM_states is 
     (
@@ -44,7 +57,7 @@ architecture Behavioral of UART_transmitter is
     -- signal start_counter: std_logic := '0';             -- signal to start the baud16 counter module
     -- signal half_ready   : std_logic;                    -- signal that the counter counted to 8 
     -- signal ready        : std_logic;                    -- signal that the counter counted to 16
-    -- signal fill_SIPO    : std_logic := '0';             -- signal to start filling SIPO from RxD. Connects to 'start' of SIPO
+    signal fill_SIPO    : std_logic := '0';             -- signal to pass data from FIFO to PISO. Connects to 'start' of PISO
     -- signal filled_SIPO  : std_logic;                    -- signal that SIPO filled up
     signal data_internal: std_logic_vector(7 downto 0); -- data passed around from FIFO to SIPO
     signal full_FIFO    : std_logic;                    -- It is '1' if FIFO is completely filled. Connects to 'full' of FIFO
@@ -68,7 +81,17 @@ architecture Behavioral of UART_transmitter is
                     full  => full_FIFO,
                     empty => empty_FIFO
                 );
-        
+
+        TX_PISO: PISO port map
+            (
+                baud_clk => baud_ref,
+                reset    => reset,
+                start    => start,
+                ready    => ready,
+                p_in     => p_in,
+                s_out    => s_out               
+            );
+
         -----------------------------------------------------------------------------------------------------------------
         -- signals
         -----------------------------------------------------------------------------------------------------------------

@@ -8,6 +8,7 @@
 --
 -- Uses some control signals:
 --  + ready (out): signals that PISO is empty and ready to be written
+--  + load (in): signal to load data into PISO
 --  + start (in): when set to '1' PISO takes data and starts transmission. As long as it remains '1', process continues
 --  + reset (in): resets every process going on
 --
@@ -25,6 +26,7 @@ entity PISO is
     (
         baud_clk : in std_logic;
         reset    : in std_logic;
+        load     : in std_logic;
         start    : in std_logic;
         ready    : out std_logic;
         p_in     : in std_logic_vector(7 downto 0);
@@ -39,7 +41,7 @@ architecture Behavioral of PISO is
     signal baud_tick    : std_logic := '0';     -- mod 16 tick, that is defined by baud_count
     signal sending      : std_logic := '0';     -- signal that PISO is sending serial data at the momment
     signal ready_int    : std_logic := '0';     -- if '1' PISO sent all data and is ready to fill
-    signal shift_reg    : std_logic_vector(8 downto 0) := (others => '0'); -- internal signal to manage contents of PISO
+    signal shift_reg    : std_logic_vector(8 downto 0) := (others => '1'); -- internal signal to manage contents of PISO
     signal data_out     : std_logic := '1';     -- internal signal to manage the outgoing data
     
     begin
@@ -67,24 +69,57 @@ architecture Behavioral of PISO is
                 end if;
         end process mod16_counter;
 
+
+        PISO_load: process (reset, baud_clk) is
+            begin
+                if reset <= '1' then
+                    shift_reg <= (others => '1');
+                    ready_int <= '1';
+                elsif rising_edge(baud_clk) and load = '1' and ready_int = '1' and sending = '0' then
+                    shift_reg <= '1' & p_in;
+                    ready_int <= '0';
+                end if;
+        end process PISO_load;
+
         PISO_send: process (reset, baud_clk) is
             begin
                 if reset = '1' then
                     step <= 0;
                     ready_int <= '1';
-                    shift_reg <= (others => '0');
                     data_out <= '1';
                     sending <= '0';
-                else
-                    if rising_edge(baud_clk) and baud_tick = '1' then
-                        if start = '1' then
+                elsif rising_edge(baud_clk) then
+                    if start = '1' and sending = '0' then
+                        sending = '1';
+                        data_out <= '0';
+                    elsif start = '1' and sending = '1' then
+                        if step = 8 then
+                            step <= 0;
+                            ready_int <= '1';
+                            data_out <= '1';
+                            sending <= '0';
+                        else
+                            data_out <= shift_reg(step);
+                            step <= step + 1;
+                            ready_int <= '0';
+                            sending <= '1';
+                        end if;
+                    else
+
+                    end if;
+
+                end if;
+
+
+
+                        if start = '1' and baud_tick = '1' then
                             if sending = '0' then
                                 shift_reg <= '1' & p_in;
                                 ready_int <= '0';
                                 data_out <= '0';
                                 sending <= '1';
                             else
-                                if step = 9 then
+                                if step = 8 then
                                     step <= 0;
                                     ready_int <= '1';
                                     shift_reg <= (others => '0');
@@ -97,7 +132,7 @@ architecture Behavioral of PISO is
                                     sending <= '1';
                                 end if;
                             end if;
-                        else
+                        elsif start = '0' then
                             step <= 0;
                             ready_int <= '1';
                             shift_reg <= (others => '0');

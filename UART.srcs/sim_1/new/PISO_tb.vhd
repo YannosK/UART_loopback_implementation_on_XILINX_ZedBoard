@@ -1,6 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
---use IEEE.NUMERIC_STD.ALL;
+use IEEE.NUMERIC_STD.ALL;
 USE std.env.all;
 
 entity PISO_tb is
@@ -29,7 +29,8 @@ architecture Behavioral of PISO_tb is
     
     signal data     : std_logic_vector(7 downto 0) := "01010101"; -- NO START BIT INCLUDED, stop bits included intentionally
 
-    constant baud_period : time := 550 ns;
+    constant baud16_period : time := 550 ns;
+    constant baud_period   : time := 8800 ns;
 
     begin
 
@@ -48,17 +49,17 @@ architecture Behavioral of PISO_tb is
 		        baud_clk <= '1';
 		        wait for 10 ns;
 		        baud_clk <= '0';
-		        wait for baud_period - 10 ns;
+		        wait for baud16_period - 10 ns;
         end process baud16_gen;
 
         testbench: process is
             begin
                 
                 reset <= '1';
-                wait for 2*baud_period;
+                wait for 2*baud16_period;
                 wait until falling_edge(baud_clk);
                 reset <= '0';
-                wait for 2*baud_period;
+                wait for 2*baud16_period;
 
                 -- simulating incoming data
                 p_in <= data;
@@ -68,7 +69,10 @@ architecture Behavioral of PISO_tb is
 
                 -- start of transmission
                 start <= '1';
-                wait for 16*10*baud_period;
+
+                wait for 12*baud_period;
+                stop(1);
+                
                 wait until falling_edge(baud_clk);
                 
                 -- checking if start does a resetI
