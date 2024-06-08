@@ -64,7 +64,6 @@ architecture Behavioral of SIPO is
                         end if;
                     end if;
                 end if;
-
         end process mod16_counter;
 
         SIPO_fill: process (reset, baud_clk) is

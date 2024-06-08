@@ -79,12 +79,12 @@ architecture Behavioral of UART is
         transmitter: UART_transmitter port map
             (
                 clock    => clk_100MHz,
-                reset    =>
-                baud_ref =>
-                Tx_write =>
-                Tx_Data  =>
-                Tx_Ready =>
-                TxD      =>
+                reset    => reset,
+                baud_ref => baudrate16,
+                Tx_write => TX_write,
+                Tx_Data  => TX_Data,
+                Tx_Ready => TX_Ready,
+                TxD      => TxD
             );
 
         baud16_generator: baudrate_generator
