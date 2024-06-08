@@ -1,0 +1,51 @@
+----------------------------------------------------------------------------------
+-- Takes en_16x_baud as reference and counts up to 8 and 16
+-- To use the counter signal 'start' must remain '1'
+----------------------------------------------------------------------------------
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity baud16_counter is
+    port
+    (
+        baud_clk    : in std_logic;
+        reset       : in std_logic;
+        start       : in std_logic;     -- must be '1' to use counter. In a way it is like a sy
+        half_ready  : out std_logic;    -- counter counted to 8
+        ready       : out std_logic     -- counter counted to 16
+    );
+end baud16_counter;
+
+architecture Behavioral of baud16_counter is
+
+    signal count : positive := 1;
+
+    begin
+
+        count_up: process(baud_clk, reset) is
+            begin
+                if reset = '1' then
+                    count <= 1;
+                    half_ready <= '0';
+                    ready <= '0';
+                elsif rising_edge(baud_clk) then
+                    if start = '1' then
+                        if count = 8 then
+                            half_ready <= '1';
+                            count <= count + 1;
+                        elsif count = 16 then
+                            ready <= '1';
+                        else
+                            count <= count + 1;
+                        end if;
+                    else
+                        count <= 1;
+                        half_ready <= '0';
+                        ready <= '0';
+                    end if;
+                end if;
+        end process count_up;
+
+end Behavioral;

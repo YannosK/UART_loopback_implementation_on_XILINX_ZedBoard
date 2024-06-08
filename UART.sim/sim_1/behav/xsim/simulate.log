@@ -1,6 +1,0 @@
-Time resolution is 1 ps
-Note: Incoming symbol arrives
-Time: 2200 ns  Iteration: 0  Process: /UART_tb/testbench  File: D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/UART_tb.vhd
-Note: Successfully received
-Time: 90200 ns  Iteration: 0  Process: /UART_tb/testbench  File: D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/UART_tb.vhd
-$stop called at time : 107800 ns : File "D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/UART_tb.vhd" Line 94
