@@ -1,0 +1,3 @@
+Time resolution is 1 ps
+$stop called at time : 116610 ns : File "D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/PISO_tb.vhd" Line 74
+$stop called at time : 134210 ns : File "D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/PISO_tb.vhd" Line 82

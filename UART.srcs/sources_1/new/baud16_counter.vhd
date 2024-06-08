@@ -12,7 +12,7 @@ entity baud16_counter is
     (
         baud_clk    : in std_logic;
         reset       : in std_logic;
-        start       : in std_logic;     -- must be '1' to use counter. In a way it is like a sy
+        start       : in std_logic;     -- must be '1' to use counter. In a way it is like a synchronous reset
         half_ready  : out std_logic;    -- counter counted to 8
         ready       : out std_logic     -- counter counted to 16
     );
