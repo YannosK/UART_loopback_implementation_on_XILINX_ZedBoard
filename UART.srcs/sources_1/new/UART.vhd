@@ -38,19 +38,18 @@ architecture Behavioral of UART is
         );
     end component UART_receiver;
 
-    -- component UART_transmitter is
-    --     Port
-    --     (
-    --         baud_ref   : in  std_logic;
-    --         clock      : in  std_logic;
-    --         reset      : in  std_logic;
-    --         Tx_write   : in  std_logic;
-    --         Tx_Ready   : out std_logic;
-    --         Tx_Data    : in  std_logic_vector(7 downto 0);
-    --         TxD        : out std_logic;
-    --         reset      : in  std_logic
-    --     );
-    -- end component    UART_transmitter;
+    component UART_transmitter is
+        Port
+        (
+            clock      : in  std_logic;
+            reset      : in  std_logic;
+            baud_ref   : in  std_logic;
+            Tx_write   : in  std_logic;
+            Tx_Data    : in  std_logic_vector(7 downto 0);
+            Tx_Ready   : out std_logic;
+            TxD        : out std_logic
+        );
+    end component UART_transmitter;
     
     component baudrate_generator is
         generic (baudRate : integer := 115200);
@@ -77,17 +76,16 @@ architecture Behavioral of UART is
                 RxD      => RxD      
             );
         
-        -- transmitter: UART_transmitter port map
-        --     (
-        --         clock    => clk_100MHz,
-        --         baud_ref => baudrate16,
-        --         reset    => reset,
-        --         Tx_write => Tx_write,
-        --         Tx_Ready => Tx_Ready,
-        --         Tx_Data  => Tx_Data,
-        --         TxD      => TxD,
-        --         reset    => reset
-        --     );
+        transmitter: UART_transmitter port map
+            (
+                clock    => clk_100MHz,
+                reset    =>
+                baud_ref =>
+                Tx_write =>
+                Tx_Data  =>
+                Tx_Ready =>
+                TxD      =>
+            );
 
         baud16_generator: baudrate_generator
             generic map
