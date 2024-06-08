@@ -1,3 +1,10 @@
 Time resolution is 1 ps
-$stop called at time : 116610 ns : File "D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/PISO_tb.vhd" Line 74
-$stop called at time : 134210 ns : File "D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/PISO_tb.vhd" Line 82
+$stop called at time : 2200 ns : File "D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/uart_system_top_tb.vhd" Line 59
+Note: Incoming symbol arrives
+Time: 2200 ns  Iteration: 0  Process: /uart_system_top_tb/testbench  File: D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/uart_system_top_tb.vhd
+Note: Successfully received
+Time: 107800 ns  Iteration: 0  Process: /uart_system_top_tb/testbench  File: D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/uart_system_top_tb.vhd
+$stop called at time : 107800 ns : File "D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/uart_system_top_tb.vhd" Line 72
+Note: Successfully transmitted
+Time: 213400 ns  Iteration: 0  Process: /uart_system_top_tb/testbench  File: D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/uart_system_top_tb.vhd
+$stop called at time : 213400 ns : File "D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sim_1/new/uart_system_top_tb.vhd" Line 78

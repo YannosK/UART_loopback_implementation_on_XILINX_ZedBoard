@@ -14,14 +14,14 @@ end reg_8bit;
 
 architecture Behavioral of reg_8bit is
     begin
-        process (clk)
-        begin
-            if reset = '1' then
-                d_out <= (others => '1');
-            elsif rising_edge(clk) then
-                if (we = '1') then
-                    d_out <= d_in;
+        process (clk, reset) is
+            begin
+                if reset = '1' then
+                    d_out <= (others => '1');
+                elsif rising_edge(clk) then
+                    if (we = '1') then
+                        d_out <= d_in;
+                    end if;
                 end if;
-            end if;
         end process;
 end Behavioral;
