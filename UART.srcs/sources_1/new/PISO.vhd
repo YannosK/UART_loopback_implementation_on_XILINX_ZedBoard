@@ -39,7 +39,7 @@ architecture Behavioral of PISO is
     signal baud_tick    : std_logic := '0';     -- mod 16 tick, that is defined by baud_count
     signal sending      : std_logic := '0';     -- signal that PISO is sending serial data at the momment
     signal ready_int    : std_logic := '0';     -- if '1' PISO sent all data and is ready to fill
-    signal shift_reg    : std_logic_vector(9 downto 0) := (others => '0'); -- internal signal to manage contents of PISO
+    signal shift_reg    : std_logic_vector(8 downto 0) := (others => '0'); -- internal signal to manage contents of PISO
     signal data_out     : std_logic := '1';     -- internal signal to manage the outgoing data
     
     begin
@@ -76,11 +76,12 @@ architecture Behavioral of PISO is
                     data_out <= '1';
                     sending <= '0';
                 else
-                    if rising_edge(baud_clk) then
+                    if rising_edge(baud_clk) and baud_tick = '1' then
                         if start = '1' then
                             if sending = '0' then
-                                shift_reg <= '1' & p_in & '0';
+                                shift_reg <= '1' & p_in;
                                 ready_int <= '0';
+                                data_out <= '0';
                                 sending <= '1';
                             else
                                 if step = 9 then
