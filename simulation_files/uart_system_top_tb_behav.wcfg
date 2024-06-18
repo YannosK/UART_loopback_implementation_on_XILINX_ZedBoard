@@ -11,13 +11,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000000 us"></ZoomStartTime>
-      <ZoomEndTime time="314.200001 us"></ZoomEndTime>
-      <Cursor1Time time="213.400000 us"></Cursor1Time>
+      <ZoomStartTime time="0.040000 us"></ZoomStartTime>
+      <ZoomEndTime time="53.640001 us"></ZoomEndTime>
+      <Cursor1Time time="86.340000 us"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="208"></NameColumnWidth>
-      <ValueColumnWidth column_width="89"></ValueColumnWidth>
+      <ValueColumnWidth column_width="84"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="7" />
    <wvobject fp_name="group15" type="group">
@@ -52,9 +52,11 @@
    <wvobject fp_name="group16" type="group">
       <obj_property name="label">Receiver</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="group53" type="group">
          <obj_property name="label">baud_counter</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="/uart_system_top_tb/uut/UART_module/receiver/RX_counter/start" type="logic">
             <obj_property name="ElementShortName">start</obj_property>
             <obj_property name="ObjectShortName">start</obj_property>
@@ -84,6 +86,10 @@
             <obj_property name="ElementShortName">fill</obj_property>
             <obj_property name="ObjectShortName">fill</obj_property>
          </wvobject>
+         <wvobject fp_name="/uart_system_top_tb/uut/UART_module/receiver/RX_SIPO/ready" type="logic">
+            <obj_property name="ElementShortName">ready</obj_property>
+            <obj_property name="ObjectShortName">ready</obj_property>
+         </wvobject>
          <wvobject fp_name="/uart_system_top_tb/uut/UART_module/receiver/RX_SIPO/baud_count" type="other">
             <obj_property name="ElementShortName">baud_count</obj_property>
             <obj_property name="ObjectShortName">baud_count</obj_property>
@@ -96,6 +102,7 @@
       <wvobject fp_name="group29" type="group">
          <obj_property name="label">FIFO</obj_property>
          <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
          <wvobject fp_name="/uart_system_top_tb/uut/UART_module/receiver/RX_FIFO/wr_en" type="logic">
             <obj_property name="ElementShortName">wr_en</obj_property>
             <obj_property name="ObjectShortName">wr_en</obj_property>

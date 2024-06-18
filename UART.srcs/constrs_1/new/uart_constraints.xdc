@@ -16,7 +16,7 @@
 # ---------------------------------------------------------------------------- 
 # ZedBoard Timing Constraints
 # define clock and period
-# create_clock -period 10 -name clk -waveform {0.000 5.000} [get_ports clk_100MHz]
+create_clock -period 10 -name clk -waveform {0.000 5.000} [get_ports clk_100MHz]
 set_property PACKAGE_PIN Y9 [get_ports {clk_100MHz}];  # "GCLK"
 
 # ----------------------------------------------------------------------------
@@ -36,8 +36,8 @@ set_property PACKAGE_PIN Y9 [get_ports {clk_100MHz}];  # "GCLK"
 # JB Pmod - Bank 13
 # ---------------------------------------------------------------------------- 
 #set_property PACKAGE_PIN W12 [get_ports {JB1}];  # "JB1"
-#set_property PACKAGE_PIN W11 [get_ports {JB2}];  # "JB2"
-#set_property PACKAGE_PIN V10 [get_ports {JB3}];  # "JB3"
+set_property PACKAGE_PIN W11 [get_ports {RxD}];  # "JB2"
+set_property PACKAGE_PIN V10 [get_ports {TxD}];  # "JB3"
 #set_property PACKAGE_PIN W8 [get_ports {JB4}];  # "JB4"
 #set_property PACKAGE_PIN V12 [get_ports {JB7}];  # "JB7"
 #set_property PACKAGE_PIN W10 [get_ports {JB8}];  # "JB8"
@@ -144,7 +144,7 @@ set_property PACKAGE_PIN Y9 [get_ports {clk_100MHz}];  # "GCLK"
 #set_property PACKAGE_PIN R16 [get_ports {BTND}];  # "BTND"
 #set_property PACKAGE_PIN N15 [get_ports {BTNL}];  # "BTNL"
 #set_property PACKAGE_PIN R18 [get_ports {BTNR}];  # "BTNR"
-# set_property PACKAGE_PIN T18 [get_ports {reset}];  # "BTNU"
+set_property PACKAGE_PIN T18 [get_ports {rst}];  # "BTNU"
 
 # ----------------------------------------------------------------------------
 # USB OTG Reset - Bank 34
