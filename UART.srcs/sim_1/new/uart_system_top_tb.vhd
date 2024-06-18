@@ -23,7 +23,10 @@ architecture Behavioral of uart_system_top_tb is
     signal RxD        : std_logic := '1';
     signal TxD        : std_logic;
 
-    signal incoming_symbol : std_logic_vector(9 downto 0) := "1010101010";
+    signal symbol_1 : std_logic_vector(9 downto 0) := "1010101010"; -- Easy to visualise - Letter 'U'
+    signal symbol_2 : std_logic_vector(9 downto 0) := "1011000100"; -- Starts with 0 and ends with zero - letter 'b'
+    signal symbol_3 : std_logic_vector(9 downto 0) := "0010101010"; -- INVALID TRANSMISSION - Wrong stop bit
+    signal symbol_4 : std_logic_vector(9 downto 0) := "1111111110"; -- A difficult one - not corresponding to something in ASCI
 
     constant baud           : integer := 115200;
     constant clk_period     : time := 10 ns;
@@ -58,24 +61,58 @@ architecture Behavioral of uart_system_top_tb is
 
                 stop(1);
 
-                report "Incoming symbol arrives";
+                report "Incoming symbol 1 arrives";
 
                 for I in 0 to 9 loop
-                    RxD <= incoming_symbol(I);
+                    RxD <= symbol_1(I);
                     wait for baud_period;
                 end loop;
 
                 wait for 2*baud_period;
 
-                report "Successfully received";
+                report "Successfully received symbol 1";
 
                 stop(2);
 
                 wait for 12*baud_period;
 
-                report "Successfully transmitted";
+                report "Successfully transmitted symbol 1";
 
                 stop(3);
+
+                report "Incoming symbol 2 arrives";
+
+                for I in 0 to 9 loop
+                    RxD <= symbol_2(I);
+                    wait for baud_period;
+                end loop;
+
+                wait for 2*baud_period;
+
+                report "Successfully received symbol 2";
+
+                stop(4);
+
+                wait for 12*baud_period;
+
+                report "Successfully transmitted symbol 2";
+
+                stop(5);
+
+                report "Incoming symbol 3 arrives";
+
+                for I in 0 to 9 loop
+                    RxD <= symbol_3(I);
+                    wait for baud_period;
+                end loop;
+
+                RxD <= '1';
+
+                wait for 2*baud_period;
+
+                report "Symbol 3 is invalid";
+
+                stop(6);
                 
         end process testbench;
 

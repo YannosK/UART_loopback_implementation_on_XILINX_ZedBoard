@@ -6,7 +6,8 @@ entity adder_accum_4bit is
     port
     (
         clk     : in std_logic;
-        reset   : in std_logic;
+        reset   : in std_logic;         -- global reset
+        clear   : in std_logic;         -- local reset
         add     : in std_logic;
         d_out   : out std_logic_vector (3 downto 0)
     );
@@ -15,14 +16,16 @@ end adder_accum_4bit;
 architecture Behavioral of adder_accum_4bit is
 
     signal data_i : integer := 0;
+    signal rst    : std_logic := '0';
 
     begin
 
         d_out <= std_logic_vector(to_unsigned(data_i, d_out'length));
+        rst <= reset or clear;
 
-        process (clk, reset) is
+        process (clk, rst) is
             begin
-                if reset = '1' then
+                if rst = '1' then
                     data_i <= 0;
                 elsif rising_edge(clk) then
                     if (add = '1') then

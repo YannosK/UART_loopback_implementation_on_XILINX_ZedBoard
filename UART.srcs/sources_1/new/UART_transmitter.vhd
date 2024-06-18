@@ -58,6 +58,7 @@ architecture Behavioral of UART_transmitter is
         (
             clk     : in std_logic;
             reset   : in std_logic;
+            clear   : in std_logic;
             add     : in std_logic;
             d_out   : out std_logic_vector (3 downto 0)
         );
@@ -81,6 +82,7 @@ architecture Behavioral of UART_transmitter is
     signal data_internal: std_logic_vector(7 downto 0); -- data output of internal register
     signal data_out     : std_logic := '1';             -- signal to manage the serial ouput of TX. Connects to TxD
     signal add_count    : std_logic := '0';             -- increments counter of data transmission
+    signal clear_count  : std_logic := '1';             -- clear of counter for data transmission of TX
     signal data_count   : std_logic_vector(3 downto 0); -- value of counter for data transmission
     signal full_FIFO    : std_logic;                    -- It is '1' if FIFO is completely filled. Connects to 'full' of FIFO
     signal read_FIFO    : std_logic := '0';             -- Set '1' to read from FIFO. Connects to 'rd_en' in FIFO. Only read if not empty
@@ -125,7 +127,8 @@ architecture Behavioral of UART_transmitter is
         TX_data_counter: adder_accum_4bit port map
                 (
                     clk   => baud_ref,   
-                    reset => reset, 
+                    reset => reset,
+                    clear => clear_count,
                     add   => add_count,
                     d_out => data_count
                 );
@@ -157,6 +160,7 @@ architecture Behavioral of UART_transmitter is
                 read_FIFO <= '0';
                 reg_data <= '0';
                 data_out <= '1';
+                clear_count <= '1';
                 start_counter <= '0';
                 add_count <= '0';
                 case current_state is
@@ -177,6 +181,7 @@ architecture Behavioral of UART_transmitter is
                             next_state <= TX_send_start_bit;
                         end if;
                     when TX_data_send =>
+                        clear_count <= '0';
                         if to_integer(unsigned(data_count)) = 8 then
                             data_out <= data_internal(7);
                         else
