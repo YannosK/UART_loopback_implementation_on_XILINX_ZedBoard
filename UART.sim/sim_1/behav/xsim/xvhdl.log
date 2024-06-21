@@ -1,2 +1,2 @@
-INFO: [VRFC 10-163] Analyzing VHDL file "D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sources_1/new/SIPO.vhd" into library xil_defaultlib
-INFO: [VRFC 10-3107] analyzing entity 'SIPO'
+INFO: [VRFC 10-163] Analyzing VHDL file "D:/Yannos/FILES/PROGRAMS/FPGA/VIVADO/Space_Data_Systems/Exercise_1/UART.srcs/sources_1/new/UART_transmitter.vhd" into library xil_defaultlib
+INFO: [VRFC 10-3107] analyzing entity 'UART_transmitter'
