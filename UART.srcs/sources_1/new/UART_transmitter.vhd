@@ -36,7 +36,7 @@ architecture Behavioral of UART_transmitter is
         TX_idle,
         TX_send_start_bit,
         TX_data_send,
-        TX_stop_bit
+        TX_send_stop_bit
     );
 
     signal current_state    : FSM_states := TX_idle;
@@ -109,36 +109,72 @@ architecture Behavioral of UART_transmitter is
                     when TX_send_start_bit =>
                         TxD <= '0';
                         bitindex := 0;
-                        if rising_edge(baud_ref) then
-                            counter := counter + 1;
-                            if counter = 16 then
-                                next_state <= TX_data_send;
-                            end if;
-                        else
+                        read_FIFO <= '0';
+                        if counter < 16 then
                             next_state <= TX_send_start_bit;
-                        end if;
-                    when TX_data_send =>
-                        TxD <= data_internal(bitindex);
-                        if bitindex < 8 then
                             if rising_edge(baud_ref) then
                                 counter := counter + 1;
                                 if counter = 16 then
+                                    counter := 0;
+                                    next_state <= TX_data_send;
+                                else
+                                    next_state <= TX_send_start_bit;
+                                end if;
+                            end if;
+                        elsif counter = 16 then
+                            counter := 0;
+                            next_state <= TX_data_send;
+                        else
+                            next_state <= TX_idle;
+                        end if;
+                    when TX_data_send =>
+                        read_FIFO <= '0';
+                        if bitindex < 8 then
+                            TxD <= data_internal(bitindex);
+                            if rising_edge(baud_ref) then
+                                counter := counter + 1;
+                                if counter = 16 then
+                                    counter := 0;
                                     bitindex := bitindex + 1;
                                 end if;
-                            else
-                                next_state <= TX_send_start_bit;
                             end if;
+                            next_state <= TX_data_send;
+                        else
+                            TxD <= data_internal(7);
+                            next_state <= TX_send_stop_bit;
                         end if;
-                    when TX_stop_bit =>
-                        TxD <= '0';
-                        if rising_edge(baud_ref) then
-                            counter := counter + 1;
-                            if counter = 16 then
-                                next_state <= TX_data_send;
+                    when TX_send_stop_bit =>
+                        TxD <= '1';
+                        bitindex := 0;
+                        read_FIFO <= '0';
+                        data_internal <= (others => '1');
+                        if counter < 16 then
+                            next_state <= TX_send_stop_bit;
+                            if rising_edge(baud_ref) then
+                                counter := counter + 1;
+                                if counter = 16 then
+                                    counter := 0;
+                                    next_state <= TX_idle;
+                                else
+                                    next_state <= TX_send_stop_bit;
+                                end if;
                             end if;
                         else
-                            next_state <= TX_send_start_bit;
+                            next_state <= TX_idle;
                         end if;
+                        -- TxD <= '1';
+                        -- bitindex := 0;
+                        -- if rising_edge(baud_ref) then
+                        --     counter := counter + 1;
+                        --     if counter = 16 then
+                        --         counter := 0;
+                        --         next_state <= TX_idle;
+                        --     else
+                        --         next_state <= TX_send_stop_bit;
+                        --     end if;
+                        -- else
+                        --     next_state <= TX_send_stop_bit;
+                        -- end if;
                     when others =>
                         next_state <= TX_idle;
                 end case;
