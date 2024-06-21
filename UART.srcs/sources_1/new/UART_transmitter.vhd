@@ -31,61 +31,22 @@ architecture Behavioral of UART_transmitter is
       );
     end component fifo_generator_0;
     
-    component baud16_counter is
-        port
-        (
-            baud_clk    : in std_logic;
-            reset       : in std_logic;
-            start       : in std_logic;
-            half_ready  : out std_logic;
-            ready       : out std_logic
-        );
-    end component baud16_counter;
-
-    component reg_8bit is
-        port
-        (
-            clk     : in std_logic;
-            reset   : in std_logic;
-            we      : in std_logic;
-            d_in    : in std_logic_vector (7 downto 0);
-            d_out   : out std_logic_vector (7 downto 0)
-        );
-    end component reg_8bit;
-
-    component adder_accum_4bit is
-        port
-        (
-            clk     : in std_logic;
-            reset   : in std_logic;
-            clear   : in std_logic;
-            add     : in std_logic;
-            d_out   : out std_logic_vector (3 downto 0)
-        );
-    end component adder_accum_4bit;
-
     type FSM_states is 
     (
         TX_idle,
         TX_send_start_bit,
-        TX_data_send
+        TX_data_send,
+        TX_stop_bit
     );
 
     signal current_state    : FSM_states := TX_idle;
     signal next_state       : FSM_states;
 
-    signal start_counter: std_logic := '0';             -- signal to start the baud16 counter module
-    signal half_ready   : std_logic;                    -- signal that the counter counted to 8 
-    signal ready        : std_logic;                    -- signal that the counter counted to 16
-    signal reg_data     : std_logic := '0';             -- when '1' it registers data from FIFO to internal register
     signal FIFO_out     : std_logic_vector(7 downto 0); -- data passed around from FIFO to internal register
-    signal data_internal: std_logic_vector(7 downto 0); -- data output of internal register
-    signal data_out     : std_logic := '1';             -- signal to manage the serial ouput of TX. Connects to TxD
-    signal add_count    : std_logic := '0';             -- increments counter of data transmission
-    signal clear_count  : std_logic := '1';             -- clear of counter for data transmission of TX
-    signal data_count   : std_logic_vector(3 downto 0); -- value of counter for data transmission
+    signal data_internal: std_logic_vector(7 downto 0); -- internal shift register
     signal full_FIFO    : std_logic;                    -- It is '1' if FIFO is completely filled. Connects to 'full' of FIFO
     signal read_FIFO    : std_logic := '0';             -- Set '1' to read from FIFO. Connects to 'rd_en' in FIFO. Only read if not empty
+    signal write_FIFO   : std_logic := '0';             -- Set '1' to write to FIFO. Connects to 'wr_en' in FIFO. Only write if not full
     signal empty_FIFO   : std_logic;                    -- If '1' FIFO is completely empty (no read allowed). Connects to 'empty' in FIFO
 
     begin
@@ -99,46 +60,18 @@ architecture Behavioral of UART_transmitter is
                     clk   => clock,
                     srst  => reset,
                     din   => TX_Data,
-                    wr_en => TX_write,
+                    wr_en => write_FIFO,
                     rd_en => read_FIFO,
                     dout  => FIFO_out,
                     full  => full_FIFO,
                     empty => empty_FIFO
                 );
 
-        TX_counter: baud16_counter port map
-                (
-                    baud_clk   => baud_ref,
-                    reset      => reset,
-                    start      => start_counter,
-                    half_ready => half_ready,
-                    ready      => ready
-                );
-
-        TX_register: reg_8bit port map
-                (
-                    clk   => clock,
-                    reset => reset,
-                    we    => reg_data,
-                    d_in  => FIFO_out,
-                    d_out => data_internal
-                );
-
-        TX_data_counter: adder_accum_4bit port map
-                (
-                    clk   => baud_ref,   
-                    reset => reset,
-                    clear => clear_count,
-                    add   => add_count,
-                    d_out => data_count
-                );
-        
         -----------------------------------------------------------------------------------------------------------------
         -- signals
         -----------------------------------------------------------------------------------------------------------------
 
         TX_Ready <= not full_FIFO;
-        TxD <= data_out;
 
         -----------------------------------------------------------------------------------------------------------------
         -- processes
@@ -155,50 +88,56 @@ architecture Behavioral of UART_transmitter is
                 end if;
         end process state_reg;
         
-        state_logic: process (current_state, empty_FIFO, ready) is
+        state_logic: process (current_state, TX_write, baud_ref) is
+            variable counter : integer := 0;
+            variable bitindex: integer := 0;
             begin
-                read_FIFO <= '0';
-                reg_data <= '0';
-                data_out <= '1';
-                clear_count <= '1';
-                start_counter <= '0';
-                add_count <= '0';
                 case current_state is
                     when TX_idle =>
-                        if empty_FIFO = '0' then
+                        TxD <= '1';
+                        counter := 0;
+                        bitindex := 0;
+                        if empty_FIFO = '0' and TX_write = '1' then
                             read_FIFO <= '1';
-                            reg_data <= '1';
+                            data_internal <= FIFO_out;                            
                             next_state <= TX_send_start_bit;
                         else
+                            read_FIFO <= '0';
+                            data_internal <= (others => '1');
                             next_state <= TX_idle;
                         end if;
                     when TX_send_start_bit =>
-                        data_out <= '0';
-                        start_counter <= '1';
-                        if ready = '1' then
-                            next_state <= TX_data_send;
+                        TxD <= '0';
+                        bitindex := 0;
+                        if rising_edge(baud_ref) then
+                            counter := counter + 1;
+                            if counter = 16 then
+                                next_state <= TX_data_send;
+                            end if;
                         else
                             next_state <= TX_send_start_bit;
                         end if;
                     when TX_data_send =>
-                        clear_count <= '0';
-                        if to_integer(unsigned(data_count)) = 8 then
-                            data_out <= data_internal(7);
-                        else
-                            data_out <= data_internal(to_integer(unsigned(data_count)));
-                        end if;
-                        start_counter <= '1';
-                        if ready = '1' then
-                            if to_integer(unsigned(data_count)) = 8 then
-                                start_counter <= '0';
-                                next_state <= TX_idle;
+                        TxD <= data_internal(bitindex);
+                        if bitindex < 8 then
+                            if rising_edge(baud_ref) then
+                                counter := counter + 1;
+                                if counter = 16 then
+                                    bitindex := bitindex + 1;
+                                end if;
                             else
-                                add_count <= '1';
-                                start_counter <= '0';
+                                next_state <= TX_send_start_bit;
+                            end if;
+                        end if;
+                    when TX_stop_bit =>
+                        TxD <= '0';
+                        if rising_edge(baud_ref) then
+                            counter := counter + 1;
+                            if counter = 16 then
                                 next_state <= TX_data_send;
                             end if;
                         else
-                            next_state <= TX_data_send;
+                            next_state <= TX_send_start_bit;
                         end if;
                     when others =>
                         next_state <= TX_idle;
