@@ -68,7 +68,10 @@ architecture Behavioral of UART_transmitter is
     (
         TX_idle,
         TX_send_start_bit,
-        TX_data_send
+        -- TX_counter_reset_1,
+        TX_data_send,
+        -- TX_counter_reset_2,
+        TX_send_stop_bit
     );
 
     signal current_state    : FSM_states := TX_idle;
@@ -176,10 +179,15 @@ architecture Behavioral of UART_transmitter is
                         data_out <= '0';
                         start_counter <= '1';
                         if ready = '1' then
+                            -- next_state <= TX_counter_reset_1;
                             next_state <= TX_data_send;
                         else
                             next_state <= TX_send_start_bit;
                         end if;
+                    -- when TX_counter_reset_1 =>
+                    --     data_out <= '0';
+                    --     start_counter <= '0';
+                    --     next_state <= TX_data_send;
                     when TX_data_send =>
                         clear_count <= '0';
                         if to_integer(unsigned(data_count)) = 8 then
@@ -191,7 +199,7 @@ architecture Behavioral of UART_transmitter is
                         if ready = '1' then
                             if to_integer(unsigned(data_count)) = 8 then
                                 start_counter <= '0';
-                                next_state <= TX_idle;
+                                next_state <= TX_send_stop_bit;
                             else
                                 add_count <= '1';
                                 start_counter <= '0';
@@ -199,6 +207,14 @@ architecture Behavioral of UART_transmitter is
                             end if;
                         else
                             next_state <= TX_data_send;
+                        end if;
+                    when TX_send_stop_bit =>
+                        data_out <= '1';
+                        start_counter <= '1';
+                        if ready = '1' then
+                            next_state <= TX_idle;
+                        else
+                            next_state <= TX_send_stop_bit;
                         end if;
                     when others =>
                         next_state <= TX_idle;
