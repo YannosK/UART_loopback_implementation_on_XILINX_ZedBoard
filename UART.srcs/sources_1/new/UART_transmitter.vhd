@@ -158,7 +158,7 @@ architecture Behavioral of UART_transmitter is
                 end if;
         end process state_reg;
         
-        state_logic: process (current_state, empty_FIFO, ready, data_count) is
+        state_logic: process (current_state, empty_FIFO, ready, data_count, baud_ref) is
             begin
                 read_FIFO <= '0';
                 reg_data <= '0';
@@ -180,14 +180,17 @@ architecture Behavioral of UART_transmitter is
                         start_counter <= '1';
                         if ready = '1' then
                             next_state <= TX_counter_reset_1;
-                            -- next_state <= TX_data_send;
                         else
                             next_state <= TX_send_start_bit;
                         end if;
                     when TX_counter_reset_1 =>
                         data_out <= '0';
                         start_counter <= '0';
-                        next_state <= TX_data_send;
+                        if baud_ref = '0' then
+                            next_state <= TX_counter_reset_1;
+                        else
+                            next_state <= TX_data_send;
+                        end if;
                     when TX_data_send =>
                         clear_count <= '0';
                         if to_integer(unsigned(data_count)) = 8 then
@@ -197,7 +200,8 @@ architecture Behavioral of UART_transmitter is
                         end if;
                         start_counter <= '1';
                         if ready = '1' then
-                            if to_integer(unsigned(data_count)) = 8 then
+                            -- if to_integer(unsigned(data_count)) = 8 then
+                            if to_integer(unsigned(data_count)) = 7 then
                                 next_state <= TX_counter_reset_2;
                             else
                                 add_count <= '1';
@@ -210,7 +214,11 @@ architecture Behavioral of UART_transmitter is
                         clear_count <= '0';
                         start_counter <= '0';
                         data_out <= data_internal(7);
-                        next_state <= TX_send_stop_bit;
+                        if baud_ref = '0' then
+                            next_state <= TX_counter_reset_2;
+                        else
+                            next_state <= TX_send_stop_bit;
+                        end if;
                     when TX_send_stop_bit =>
                         data_out <= '1';
                         start_counter <= '1';

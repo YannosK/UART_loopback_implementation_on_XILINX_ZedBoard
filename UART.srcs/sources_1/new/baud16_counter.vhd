@@ -21,38 +21,39 @@ end baud16_counter;
 architecture Behavioral of baud16_counter is
 
     signal count : positive := 1;
-    signal rst   : std_logic;
 
     begin
 
-        rst <= reset or (not start);
-
-        count_up: process(baud_clk, rst) is
+        count_up: process(baud_clk, reset) is
             begin
-                if rst = '1' then
+                if reset = '1' then
                     count <= 1;
                     half_ready <= '0';
                     ready <= '0';
                 elsif rising_edge(baud_clk) then
-                    -- if start = '1' then
+                    if start = '1' then
                         if count = 8 then
                             half_ready <= '1';
                             ready <= '0';
                             count <= count + 1;
-                        elsif count = 16 then
+                        elsif count = 15 then
                             half_ready <= '0';
                             ready <= '1';
+                            count <= count + 1;
+                        elsif count = 16 then
+                            half_ready <= '0';
+                            ready <= '0';
                             count <= 1;
                         else
                             half_ready <= '0';
                             ready <= '0';
                             count <= count + 1;
                         end if;
-                    -- else
-                    --     count <= 1;
-                    --     half_ready <= '0';
-                    --     ready <= '0';
-                    -- end if;
+                    else
+                        count <= 1;
+                        half_ready <= '0';
+                        ready <= '0';
+                    end if;
                 end if;
         end process count_up;
 
