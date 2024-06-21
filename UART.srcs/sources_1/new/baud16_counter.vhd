@@ -34,10 +34,19 @@ architecture Behavioral of baud16_counter is
                     if start = '1' then
                         if count = 8 then
                             half_ready <= '1';
+                            ready <= '0';
+                            count <= count + 1;
+                        elsif count = 15 then
+                            half_ready <= '0';
+                            ready <= '1';
                             count <= count + 1;
                         elsif count = 16 then
-                            ready <= '1';
+                            half_ready <= '0';
+                            ready <= '0';
+                            count <= 1;
                         else
+                            half_ready <= '0';
+                            ready <= '0';
                             count <= count + 1;
                         end if;
                     else

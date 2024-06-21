@@ -52,15 +52,20 @@ architecture Behavioral of SIPO is
                     baud_count <= 0;
                     baud_tick <= '0';
                 else
-                    if rising_edge(baud_clk) and start = '1' then
-                        if baud_count /= 15 then                -- ATTENTION: not sure if it must be 15 or 16
-                            baud_count <= baud_count + 1;
-                            baud_tick <= '0';
-                        elsif baud_count = 15 then
-                            baud_count <= 0;
-                            baud_tick <= '1';
+                    if rising_edge(baud_clk) then
+                        if start = '1' then
+                            if baud_count /= 15 then                -- ATTENTION: not sure if it must be 15 or 16
+                                baud_count <= baud_count + 1;
+                                baud_tick <= '0';
+                            elsif baud_count = 15 then
+                                baud_count <= 0;
+                                baud_tick <= '1';
+                            else
+                                baud_tick <= '0';                   -- YOU HAVE TO SEE WHAT HAPPENS IN THAT CASE
+                            end if;
                         else
-                            baud_tick <= '0';                   -- YOU HAVE TO SEE WHAT HAPPENS IN THAT CASE
+                            baud_count <= 0;
+                            baud_tick <= '0';
                         end if;
                     end if;
                 end if;
@@ -74,16 +79,19 @@ architecture Behavioral of SIPO is
                     shift_reg <= (others => '0');
                 else
                     if rising_edge(baud_clk) then
-                        if start = '1' and ready_int = '0' and baud_tick = '1' then
-                            if fill = 7 then
-                                shift_reg <= data_in & shift_reg(7 downto 1);
-                                fill <= 0;
-                                ready_int <= '1';
-                            else
-                                shift_reg <= data_in & shift_reg(7 downto 1);
-                                fill <= fill + 1;
+                        if start = '1' then
+                            if ready_int = '0' and baud_tick = '1' then
+                                if fill = 7 then
+                                    shift_reg <= data_in & shift_reg(7 downto 1);
+                                    fill <= 0;
+                                    ready_int <= '1';
+                                else
+                                    shift_reg <= data_in & shift_reg(7 downto 1);
+                                    fill <= fill + 1;
+                                end if;
                             end if;
-                        elsif start = '0' then
+                        else
+                            fill <= 0;
                             ready_int <= '0';
                             shift_reg <= (others => '0');
                         end if;                                 -- this if statement will probably produce a latch, but I think we want that
