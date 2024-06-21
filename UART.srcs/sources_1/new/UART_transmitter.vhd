@@ -68,7 +68,9 @@ architecture Behavioral of UART_transmitter is
     (
         TX_idle,
         TX_send_start_bit,
+        TX_counter_reset1,
         TX_data_send,
+        TX_counter_reset2,
         TX_send_stop_bit
     );
 
@@ -177,10 +179,13 @@ architecture Behavioral of UART_transmitter is
                         data_out <= '0';
                         start_counter <= '1';
                         if ready = '1' then
-                            next_state <= TX_data_send;
+                            next_state <= TX_counter_reset1;
                         else
                             next_state <= TX_send_start_bit;
                         end if;
+                    when TX_counter_reset1 =>
+                        start_counter <= '0';
+                        next_state <= TX_data_send;
                     when TX_data_send =>
                         clear_count <= '0';
                         if to_integer(unsigned(data_count)) = 8 then
@@ -191,16 +196,17 @@ architecture Behavioral of UART_transmitter is
                         start_counter <= '1';
                         if ready = '1' then
                             if to_integer(unsigned(data_count)) = 8 then
-                                start_counter <= '0';
-                                next_state <= TX_send_stop_bit;
+                                next_state <= TX_counter_reset2;
                             else
                                 add_count <= '1';
-                                start_counter <= '0';
                                 next_state <= TX_data_send;
                             end if;
                         else
                             next_state <= TX_data_send;
                         end if;
+                    when TX_counter_reset2 =>
+                        start_counter <= '0';
+                        next_state <= TX_send_stop_bit;
                     when TX_send_stop_bit =>
                         data_out <= '1';
                         start_counter <= '1';
