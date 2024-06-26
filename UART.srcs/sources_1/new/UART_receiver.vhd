@@ -40,8 +40,8 @@ architecture rtl of UART_receiver is
 
     signal state_reg : FSM_states := RX_idle;
     signal data_internal: std_logic_vector(7 downto 0); -- internal shift register 
-    signal full_FIFO : std_logic; -- It is '1' if FIFO is completely filled. Connects to 'full' of FIFO
     signal write_FIFO : std_logic := '0'; -- Used as signal to write to FIFO. Not allowed to write if FIFO is full. Connects to wr_en of FIFO
+    signal full_FIFO : std_logic; -- It is '1' if FIFO is completely filled. Connects to 'full' of FIFO
     signal empty_FIFO : std_logic; -- If '1' FIFO is completely empty (no read allowed). Connects to 'empty' in FIFO
 
     begin
@@ -68,22 +68,24 @@ architecture rtl of UART_receiver is
                 if(reset='1') then
                 	state_reg <= RX_idle;
                 	data_internal <= (others=>'0');
+                	write_FIFO <= '0';
                 	counter := 0;
                 	bitindex := 0;
-                	write_FIFO <= '0';
                 elsif(rising_edge(clock)) then
                     write_FIFO <= '0';
                     case state_reg is
-                        when RX_idle =>
+                        when RX_idle =>                 -- DO I need data_internal specified in each state?
                             if RxD='0' then
+                                bitindex := 0;
                                 counter := 1;
                                 state_reg <= RX_receive_start_bit;
                             else
                                 bitindex := 0;
                                 counter := 0;
-                            state_reg <= RX_idle;
+                                state_reg <= RX_idle;
                             end if;
-                        when RX_receive_start_bit =>	
+                        when RX_receive_start_bit =>
+                            bitindex := 0;
                             if counter = 7 then
                                 counter := 0;
                                 if RxD='0' then
@@ -106,14 +108,15 @@ architecture rtl of UART_receiver is
                                     bitindex := bitindex + 1;
                                     state_reg <= RX_data_receive;
                                 end if;
-                            else
+                            else                            -- No problem, or latch here, with undefined 
                                 counter := counter + 1;
                                 state_reg <= RX_data_receive;
                             end if;
                         when RX_receive_stop_bit =>
+                            bitindex := 0;
                             if counter = 15 then
                                 counter := 0;
-                                if RxD='1' then 
+                                if RxD='1' then             -- No latch here either?
                                     write_FIFO <= '1';
                                 end if;
                                 state_reg <= RX_idle;
