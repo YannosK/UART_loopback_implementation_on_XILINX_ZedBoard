@@ -1,194 +1,129 @@
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.NUMERIC_STD.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 entity UART_receiver is
-    Port
+    port
     (
-        clock      : in  std_logic;
-        reset      : in  std_logic;
-        baud_ref   : in  std_logic;
-        Rx_Read    : in  std_logic;
-        Rx_Valid   : out std_logic;
-        Rx_Data    : out std_logic_vector(7 downto 0);
-        RxD        : in  std_logic
+        clock : in std_logic;
+        reset : in std_logic;
+        RxD : in std_logic;
+        RX_Read : in std_logic;
+        RX_Valid : out std_logic;
+        RX_Data : out std_logic_vector(7 downto 0)
     );
-end UART_receiver;
+end entity;
 
-architecture Behavioral of UART_receiver is
+architecture rtl of UART_receiver is 
 
     component fifo_generator_0 is
-      port 
-      (
-        clk     : IN STD_LOGIC;
-        srst    : IN STD_LOGIC;
-        din     : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-        wr_en   : IN STD_LOGIC;
-        rd_en   : IN STD_LOGIC;
-        dout    : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
-        full    : OUT STD_LOGIC;
-        empty   : OUT STD_LOGIC
-      );
+        port 
+        (
+        clk : IN STD_LOGIC;
+        srst : IN STD_LOGIC;
+        din : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+        wr_en : IN STD_LOGIC;
+        rd_en : IN STD_LOGIC;
+        dout : OUT STD_LOGIC_VECTOR(7 DOWNTO 0);
+        full : OUT STD_LOGIC;
+        empty : OUT STD_LOGIC
+        );
     end component fifo_generator_0;
-
-    component SIPO is
-        port
-        (
-            baud_clk: in std_logic;
-            reset   : in std_logic;
-            start   : in std_logic;
-            ready   : out std_logic;
-            s_in    : in std_logic;
-            p_out   : out std_logic_vector(7 downto 0)
-        );
-    end component SIPO;
-
-    component baud16_counter is
-        port
-        (
-            baud_clk    : in std_logic;
-            reset       : in std_logic;
-            start       : in std_logic;
-            half_ready  : out std_logic;
-            ready       : out std_logic
-        );
-    end component baud16_counter;
 
     type FSM_states is 
     (
         RX_idle,
-        RX_start_check,
-        RX_data_fetch,
-        RX_stop_check,
-        RX_FIFO_write
+        RX_receive_start_bit,
+        RX_data_receive,
+        RX_receive_stop_bit
     );
 
-    constant baud : integer := 115200;
-
-    signal current_state    : FSM_states := RX_idle;
-    signal next_state       : FSM_states;
-
-    signal start_counter: std_logic := '0';             -- signal to start the baud16 counter module
-    signal half_ready   : std_logic;                    -- signal that the counter counted to 8 
-    signal ready        : std_logic;                    -- signal that the counter counted to 16
-    signal fill_SIPO    : std_logic := '0';             -- signal to start filling SIPO from RxD. Connects to 'start' of SIPO
-    signal filled_SIPO  : std_logic;                    -- signal that SIPO filled up
-    signal data_internal: std_logic_vector(7 downto 0); -- data passed around from SIPO to FIFO
-    signal full_FIFO    : std_logic;                    -- It is '1' if FIFO is completely filled. Connects to 'full' of FIFO
-    signal write_FIFO   : std_logic;                    -- Set '1' to write to FIFO. Connects to 'wr_en' in FIFO
-    signal empty_FIFO   : std_logic;                    -- If '1' FIFO is completely empty (no read allowed). Connects to 'empty' in FIFO
+    signal state_reg : FSM_states := RX_idle;
+    signal data_internal: std_logic_vector(7 downto 0); -- internal shift register 
+    signal full_FIFO : std_logic; -- It is '1' if FIFO is completely filled. Connects to 'full' of FIFO
+    signal write_FIFO : std_logic := '0'; -- Used as signal to write to FIFO. Not allowed to write if FIFO is full. Connects to wr_en of FIFO
+    signal empty_FIFO : std_logic; -- If '1' FIFO is completely empty (no read allowed). Connects to 'empty' in FIFO
 
     begin
         
-        -----------------------------------------------------------------------------------------------------------------
-        -- modules
-        -----------------------------------------------------------------------------------------------------------------
+        Rx_valid <= not (empty_FIFO); 
 
-        RX_FIFO: fifo_generator_0 port map
-                (
-                    clk   => clock,
-                    srst  => reset,
-                    din   => data_internal,
-                    wr_en => write_FIFO,
-                    rd_en => RX_Read,           -- you have to make sure in the other side, that FIFO is not empty, and you don't read something empty
-                    dout  => Rx_Data,
-                    full  => full_FIFO,
-                    empty => empty_FIFO
-                );
+        receive_fifo : fifo_generator_0
+        port map 
+        (
+            clk => clock,
+            srst => reset,
+            din => data_internal, 
+            wr_en => write_FIFO, 
+            rd_en => RX_Read, 
+            dout => RX_Data,
+            full => full_FIFO, 
+            empty => empty_FIFO
+        );
 
-        RX_SIPO: SIPO port map
-                (
-                    baud_clk => baud_ref,
-                    reset    => reset,
-                    start    => fill_SIPO,
-                    ready    => filled_SIPO,
-                    s_in     => RxD,
-                    p_out    => data_internal
-                );
-
-        RX_counter: baud16_counter port map
-                (
-                    baud_clk   => baud_ref,
-                    reset      => reset,
-                    start      => start_counter,
-                    half_ready => half_ready,
-                    ready      => ready
-                );
-        
-        -----------------------------------------------------------------------------------------------------------------
-        -- signals
-        -----------------------------------------------------------------------------------------------------------------
-
-        RX_Valid <= not empty_FIFO;
-
-        -----------------------------------------------------------------------------------------------------------------
-        -- processes
-        -----------------------------------------------------------------------------------------------------------------
-
-        state_reg: process (clock, reset) is
+        process(clock, reset)
+            variable counter : integer := 0;
+            variable bitindex : integer := 0;
             begin
-                if reset = '1' then
-                    current_state <= RX_idle;
-                else
-                    if rising_edge(clock) then
-                        current_state <= next_state;
-                    end if;
+                if(reset='1') then
+                	state_reg <= RX_idle;
+                	data_internal <= (others=>'0');
+                	counter := 0;
+                	bitindex := 0;
+                	write_FIFO <= '0';
+                elsif(rising_edge(clock)) then
+                    write_FIFO <= '0';
+                    case state_reg is
+                        when RX_idle =>
+                            if RxD='0' then
+                                counter := 1;
+                                state_reg <= RX_receive_start_bit;
+                            else
+                                bitindex := 0;
+                                counter := 0;
+                            state_reg <= RX_idle;
+                            end if;
+                        when RX_receive_start_bit =>	
+                            if counter = 7 then
+                                counter := 0;
+                                if RxD='0' then
+                                    state_reg <= RX_data_receive;
+                                else
+                                    state_reg <= RX_receive_start_bit;
+                                end if;
+                            else
+                                counter := counter + 1;
+                                state_reg <= RX_receive_start_bit;
+                            end if;
+                        when RX_data_receive =>
+                            if counter = 15 then
+                                counter := 0;
+                                data_internal(bitindex) <= RxD;
+                                if bitindex = 7 then
+                                    bitindex := 0;
+                                    state_reg <= RX_receive_stop_bit;
+                                else
+                                    bitindex := bitindex + 1;
+                                    state_reg <= RX_data_receive;
+                                end if;
+                            else
+                                counter := counter + 1;
+                                state_reg <= RX_data_receive;
+                            end if;
+                        when RX_receive_stop_bit =>
+                            if counter = 15 then
+                                counter := 0;
+                                if RxD='1' then 
+                                    write_FIFO <= '1';
+                                end if;
+                                state_reg <= RX_idle;
+                            else
+                                counter := counter + 1;
+                                state_reg <= RX_receive_stop_bit;
+                            end if;
+                        when others=>
+                            state_reg <= RX_idle;
+                    end case;
                 end if;
-        end process state_reg;
-        
-        state_logic: process (current_state, half_ready, ready, RxD, filled_SIPO, full_FIFO) is
-            begin
-                start_counter <= '0';
-                fill_SIPO <= '0';
-                write_FIFO <= '0';
-                case current_state is
-                    when RX_idle        =>
-                        if RxD = '0' then
-                            next_state <= RX_start_check;
-                        else
-                            next_state <= RX_idle;
-                        end if;
-                    when RX_start_check =>
-                        start_counter <= '1';
-                        if half_ready = '1' then
-                            if RxD = '0' then
-                                next_state <= RX_data_fetch;
-                            else
-                                next_state <= RX_idle;
-                            end if;
-                        else
-                            next_state <= RX_start_check;
-                        end if;
-                    when RX_data_fetch  =>
-                        fill_SIPO <= '1';
-                        if filled_SIPO = '1' then
-                            next_state <= RX_stop_check;
-                        else
-                            next_state <= RX_data_fetch;
-                        end if;
-                    when RX_stop_check  =>                  -- ASSUMING: only 1 stop bit
-                        fill_SIPO <= '1';
-                        start_counter <= '1';
-                        if ready = '1' then
-                            if RxD = '1' then
-                                next_state <= RX_FIFO_write;
-                            else
-                                next_state <= RX_idle;
-                            end if;
-                        else
-                            next_state <= RX_stop_check;
-                        end if;
-                    when RX_FIFO_write  =>
-                        fill_SIPO <= '1';
-                        if full_FIFO = '1' then
-                            next_state <= RX_idle;
-                        else
-                            write_FIFO <= '1';              -- In sim it shows that it takes one cycle to write and four cycles to propagate to output
-                            next_state <= RX_idle;
-                        end if;
-                    when others =>
-                        next_state <= RX_idle;
-                end case;
-        end process state_logic;
-
-end Behavioral;
+        end process;
+end rtl;
