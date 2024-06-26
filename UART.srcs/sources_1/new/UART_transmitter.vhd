@@ -193,6 +193,7 @@ architecture Behavioral of UART_transmitter is
                         end if;
                     when TX_data_send =>
                         clear_count <= '0';
+                        start_counter <= '1';
                         data_out <= data_internal(to_integer(unsigned(data_count)));
                         if ready = '1' then
                             if to_integer(unsigned(data_count)) = 7 then

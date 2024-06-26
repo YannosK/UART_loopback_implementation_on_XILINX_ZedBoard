@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version     : Vivado v.2022.2 (win64) Build 3671981 Fri Oct 14 05:00:03 MDT 2022
-| Date             : Thu Jun 20 21:37:33 2024
+| Date             : Wed Jun 26 17:24:13 2024
 | Host             : yannos running 64-bit major release  (build 9200)
 | Command          : report_power -file uart_system_top_power_routed.rpt -pb uart_system_top_power_summary_routed.pb -rpx uart_system_top_power_routed.rpx
 | Design           : uart_system_top
@@ -30,14 +30,14 @@ Table of Contents
 ----------
 
 +--------------------------+--------------+
-| Total On-Chip Power (W)  | 0.108        |
+| Total On-Chip Power (W)  | 0.105        |
 | Design Power Budget (W)  | Unspecified* |
 | Power Budget Margin (W)  | NA           |
-| Dynamic (W)              | 0.003        |
-| Device Static (W)        | 0.106        |
+| Dynamic (W)              | 0.002        |
+| Device Static (W)        | 0.103        |
 | Effective TJA (C/W)      | 11.5         |
-| Max Ambient (C)          | 83.7         |
-| Junction Temperature (C) | 26.3         |
+| Max Ambient (C)          | 83.8         |
+| Junction Temperature (C) | 26.2         |
 | Confidence Level         | Low          |
 | Setting File             | ---          |
 | Simulation Activity File | ---          |
@@ -53,17 +53,18 @@ Table of Contents
 | On-Chip                  | Power (W) | Used     | Available | Utilization (%) |
 +--------------------------+-----------+----------+-----------+-----------------+
 | Clocks                   |     0.001 |        3 |       --- |             --- |
-| Slice Logic              |    <0.001 |      685 |       --- |             --- |
-|   LUT as Logic           |    <0.001 |      244 |     53200 |            0.46 |
-|   Register               |    <0.001 |      305 |    106400 |            0.29 |
+| Slice Logic              |    <0.001 |      713 |       --- |             --- |
+|   LUT as Logic           |    <0.001 |      283 |     53200 |            0.53 |
 |   CARRY4                 |    <0.001 |       48 |     13300 |            0.36 |
+|   Register               |    <0.001 |      309 |    106400 |            0.29 |
 |   Others                 |     0.000 |       21 |       --- |             --- |
 |   LUT as Distributed RAM |     0.000 |       12 |     17400 |            0.07 |
+|   F7/F8 Muxes            |     0.000 |        1 |     53200 |           <0.01 |
 |   BUFG                   |     0.000 |        1 |        32 |            3.13 |
-| Signals                  |    <0.001 |      572 |       --- |             --- |
+| Signals                  |    <0.001 |      600 |       --- |             --- |
 | I/O                      |    <0.001 |        4 |       200 |            2.00 |
-| Static Power             |     0.106 |          |           |                 |
-| Total                    |     0.108 |          |           |                 |
+| Static Power             |     0.103 |          |           |                 |
+| Total                    |     0.105 |          |           |                 |
 +--------------------------+-----------+----------+-----------+-----------------+
 
 
@@ -75,7 +76,7 @@ Table of Contents
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
 | Vccint    |       1.000 |     0.010 |       0.002 |      0.007 |       NA    | Unspecified | NA         |
 | Vccaux    |       1.800 |     0.010 |       0.000 |      0.010 |       NA    | Unspecified | NA         |
-| Vcco33    |       3.300 |     0.001 |       0.000 |      0.001 |       NA    | Unspecified | NA         |
+| Vcco33    |       3.300 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vcco18    |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vcco15    |       1.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
@@ -149,7 +150,7 @@ Table of Contents
 +-----------------+-----------+
 | Name            | Power (W) |
 +-----------------+-----------+
-| uart_system_top |     0.003 |
+| uart_system_top |     0.002 |
 |   UART_module   |     0.002 |
 +-----------------+-----------+
 
