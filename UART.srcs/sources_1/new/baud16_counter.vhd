@@ -1,6 +1,7 @@
 ----------------------------------------------------------------------------------
--- Takes en_16x_baud as reference and counts up to 8 and 16
+-- Takes en_16x_baud as reference and counts up from 1 to 8 and 15
 -- To use the counter signal 'start' must remain '1'
+-- If counter reaches 16 it rolls back to 1
 ----------------------------------------------------------------------------------
 
 library IEEE;
@@ -14,7 +15,7 @@ entity baud16_counter is
         reset       : in std_logic;
         start       : in std_logic;     -- must be '1' to use counter. In a way it is like a synchronous reset
         half_ready  : out std_logic;    -- counter counted to 8
-        ready       : out std_logic     -- counter counted to 16
+        ready       : out std_logic     -- counter counted to 15
     );
 end baud16_counter;
 

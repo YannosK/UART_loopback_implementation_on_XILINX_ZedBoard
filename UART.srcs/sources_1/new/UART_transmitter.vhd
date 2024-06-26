@@ -193,14 +193,8 @@ architecture Behavioral of UART_transmitter is
                         end if;
                     when TX_data_send =>
                         clear_count <= '0';
-                        if to_integer(unsigned(data_count)) = 8 then
-                            data_out <= data_internal(7);
-                        else
-                            data_out <= data_internal(to_integer(unsigned(data_count)));
-                        end if;
-                        start_counter <= '1';
+                        data_out <= data_internal(to_integer(unsigned(data_count)));
                         if ready = '1' then
-                            -- if to_integer(unsigned(data_count)) = 8 then
                             if to_integer(unsigned(data_count)) = 7 then
                                 next_state <= TX_counter_reset_2;
                             else
