@@ -75,6 +75,7 @@ architecture rtl of UART_receiver is
                     write_FIFO <= '0';
                     case state_reg is
                         when RX_idle =>                 -- DO I need data_internal specified in each state?
+                            data_internal <= (others => '0');
                             if RxD='0' then
                                 bitindex := 0;
                                 counter := 1;
@@ -87,11 +88,12 @@ architecture rtl of UART_receiver is
                         when RX_receive_start_bit =>
                             bitindex := 0;
                             if counter = 7 then
-                                counter := 0;
                                 if RxD='0' then
+                                    counter := 1;
                                     state_reg <= RX_data_receive;
                                 else
-                                    state_reg <= RX_receive_start_bit;
+                                    counter := 0;
+                                    state_reg <= RX_idle;
                                 end if;
                             else
                                 counter := counter + 1;
@@ -99,16 +101,17 @@ architecture rtl of UART_receiver is
                             end if;
                         when RX_data_receive =>
                             if counter = 15 then
-                                counter := 0;
                                 data_internal(bitindex) <= RxD;
                                 if bitindex = 7 then
                                     bitindex := 0;
+                                    counter := 1;
                                     state_reg <= RX_receive_stop_bit;
                                 else
+                                    counter := 0;
                                     bitindex := bitindex + 1;
                                     state_reg <= RX_data_receive;
                                 end if;
-                            else                            -- No problem, or latch here, with undefined 
+                            else
                                 counter := counter + 1;
                                 state_reg <= RX_data_receive;
                             end if;
@@ -116,7 +119,7 @@ architecture rtl of UART_receiver is
                             bitindex := 0;
                             if counter = 15 then
                                 counter := 0;
-                                if RxD='1' then             -- No latch here either?
+                                if RxD='1' then
                                     write_FIFO <= '1';
                                 end if;
                                 state_reg <= RX_idle;
@@ -125,6 +128,7 @@ architecture rtl of UART_receiver is
                                 state_reg <= RX_receive_stop_bit;
                             end if;
                         when others=>
+                            data_internal <= (others => '0');
                             state_reg <= RX_idle;
                     end case;
                 end if;

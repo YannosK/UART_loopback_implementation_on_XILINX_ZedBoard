@@ -88,16 +88,13 @@ architecture Behavioral of UART_transmitter is
             	bitindex := 0;
             	read_FIFO <= '0';
             elsif rising_edge(clock) then 
-                -- make sure the FIFOs read channel is deactivated
                 read_FIFO <= '0';	
                 case state_reg is
                     when TX_idle =>
                         bitindex := 0;
-                        read_FIFO <= '0'; -- no need to read FIFO here since it is FWFT. We do that on another state to save 2 cycles
                         if TX_start = '1' then
                             counter := 1; -- You will miss one cycle just to get to the other state
-                            -- SHOULDN'T WE ALSO START THE START BIT WITH:
-                            -- TxD <= '0';
+                            TxD <= '0';
                             state_reg <= TX_send_start_bit;
                         else 
                             TxD 	 <= '1';
@@ -107,34 +104,35 @@ architecture Behavioral of UART_transmitter is
                     when TX_send_start_bit =>
                         TxD <= '0';
                         bitindex := 0;
-                        read_FIFO <= '0';
                         if counter = 15 then
-                            counter := 0;
+                            counter := 1;
+                            TxD <= data_internal(bitindex);
                             state_reg <= TX_data_send;
                         else
                             counter := counter + 1;
                             state_reg <= TX_send_start_bit;
                         end if;
-                    when TX_data_send =>                -- data_internal seems unspecifies. It is FIFO's out. What does this mean?
-                        TxD <= data_internal(bitindex); -- ISN'T THERE A PROBLEM THE FIRST TIME THAT WE HAVE NOT READ FIFO YET?
+                    when TX_data_send =>
+                        TxD <= data_internal(bitindex); -- There is not problem with FIFO because it is FWFT
                         if counter = 15 then
-                            counter := 0;
                             if bitindex < 7 then
+                                counter := 0;
                                 bitindex := bitindex + 1;
                                 state_reg <= TX_data_send;
                             else
+                                counter := 1;
+                                TxD <= '1';
                                 bitindex := 0;
-                                -- here you need to read the next data sample from FIFO
-                                -- remember your FIFO is FWFT!
-                                read_FIFO <= '1';
                                 state_reg <= TX_send_stop_bit;
+                                if empty_FIFO = '0' then 
+                                    read_FIFO <= '1';
+                                end if;
                             end if;
-                        else                        -- UNSPECIFIED BIT INDEX??
+                        else
                             counter := counter + 1;
                             state_reg <= TX_data_send;
                         end if;
                     when TX_send_stop_bit =>
-                        read_FIFO <= '0';
                         TxD <= '1';
                         bitindex := 0;
                         if counter = 15 then 
@@ -145,6 +143,9 @@ architecture Behavioral of UART_transmitter is
                             state_reg <= TX_send_stop_bit;
                         end if;
                     when others =>
+                        bitindex := 0;
+                        TxD <= '1';
+                        counter := 0;
                         state_reg <= TX_idle;
                 end case;
             end if;
