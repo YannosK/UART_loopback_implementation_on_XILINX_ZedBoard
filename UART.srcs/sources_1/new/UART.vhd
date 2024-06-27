@@ -30,7 +30,6 @@ architecture Behavioral of UART is
         (
             clock      : in  std_logic;
             reset      : in  std_logic;
-            baud_ref   : in  std_logic;
             Rx_Read    : in  std_logic;
             Rx_Valid   : out std_logic;
             Rx_Data    : out std_logic_vector(7 downto 0);
@@ -43,7 +42,6 @@ architecture Behavioral of UART is
         (
             clock      : in  std_logic;
             reset      : in  std_logic;
-            baud_ref   : in  std_logic;
             Tx_write   : in  std_logic;
             Tx_Data    : in  std_logic_vector(7 downto 0);
             Tx_Ready   : out std_logic;
@@ -67,9 +65,8 @@ architecture Behavioral of UART is
 
         receiver: UART_receiver port map
             (
-                clock    => clk_100MHz,
+                clock    => baudrate16,
                 reset    => reset,
-                baud_ref => baudrate16, 
                 Rx_Read  => Rx_Read,
                 Rx_Valid => Rx_Valid,
                 Rx_Data  => Rx_Data,
@@ -78,9 +75,8 @@ architecture Behavioral of UART is
         
         transmitter: UART_transmitter port map
             (
-                clock    => clk_100MHz,
+                clock    => baudrate16,
                 reset    => reset,
-                baud_ref => baudrate16,
                 Tx_write => TX_write,
                 Tx_Data  => TX_Data,
                 Tx_Ready => TX_Ready,
