@@ -1,3 +1,14 @@
+---------------------------------------------------------------------------------------------
+-- A testbench that tests the UART implementation
+-- 
+-- RX of receive module is connected to TX of transmit module
+-- It creates a loopback function, tested with ASCII characters
+--
+-- In VIVADO:
+--  * From simulation waveforms choose 'uart_system_top_tb_behav_simplified.wcfg'
+--  * press run 6 times to complete the whole testbench  
+---------------------------------------------------------------------------------------------
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;

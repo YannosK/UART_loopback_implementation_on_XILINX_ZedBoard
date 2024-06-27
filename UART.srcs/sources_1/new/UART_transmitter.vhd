@@ -73,9 +73,6 @@ architecture Behavioral of UART_transmitter is
     -----------------------------------------------------------------------------------------------------------------
     -- processes
     -----------------------------------------------------------------------------------------------------------------
-    
-    -- use clock within the sensitivity list of your state logic process to
-    -- activate the process on every clock tick.
 
     state_logic: process (reset, clock) is
         variable counter : integer := 0;	-- baud counter
@@ -93,7 +90,7 @@ architecture Behavioral of UART_transmitter is
                     when TX_idle =>
                         bitindex := 0;
                         if TX_start = '1' then
-                            counter := 1; -- You will miss one cycle just to get to the other state
+                            counter := 1;
                             TxD <= '0';
                             state_reg <= TX_send_start_bit;
                         else 

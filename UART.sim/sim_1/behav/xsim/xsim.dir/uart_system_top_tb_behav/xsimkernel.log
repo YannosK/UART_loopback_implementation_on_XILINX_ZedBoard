@@ -1,13 +1,4 @@
-<<<<<<< HEAD
-Running: xsim.dir/uart_system_top_tb_behav/xsimk.exe -simmode gui -wdb uart_system_top_tb_behav.wdb -simrunnum 0 -socket 49859
+Running: xsim.dir/uart_system_top_tb_behav/xsimk.exe -simmode gui -wdb uart_system_top_tb_behav.wdb -simrunnum 0 -socket 63313
 Design successfully loaded
-Design Loading Memory Usage: 8692 KB (Peak: 8692 KB)
-=======
-Running: xsim.dir/uart_system_top_tb_behav/xsimk.exe -simmode gui -wdb uart_system_top_tb_behav.wdb -simrunnum 0 -socket 49782
-Design successfully loaded
-Design Loading Memory Usage: 8656 KB (Peak: 8656 KB)
->>>>>>> ronaldo_way
+Design Loading Memory Usage: 8700 KB (Peak: 8700 KB)
 Design Loading CPU Usage: 0 ms
-Simulation completed
-Simulation Memory Usage: 14884 KB (Peak: 14884 KB)
-Simulation CPU Usage: 452 ms

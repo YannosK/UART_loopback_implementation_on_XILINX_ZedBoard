@@ -74,7 +74,7 @@ architecture rtl of UART_receiver is
                 elsif(rising_edge(clock)) then
                     write_FIFO <= '0';
                     case state_reg is
-                        when RX_idle =>                 -- DO I need data_internal specified in each state?
+                        when RX_idle =>
                             data_internal <= (others => '0');
                             if RxD='0' then
                                 bitindex := 0;
