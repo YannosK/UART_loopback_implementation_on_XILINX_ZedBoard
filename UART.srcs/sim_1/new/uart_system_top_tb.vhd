@@ -37,7 +37,6 @@ architecture Behavioral of uart_system_top_tb is
     signal symbol_1 : std_logic_vector(9 downto 0) := "1010101010"; -- Easy to visualise - Letter 'U'
     signal symbol_2 : std_logic_vector(9 downto 0) := "1011000100"; -- Starts with 0 and ends with zero - letter 'b'
     signal symbol_3 : std_logic_vector(9 downto 0) := "0010101010"; -- INVALID TRANSMISSION - Wrong stop bit
-    signal symbol_4 : std_logic_vector(9 downto 0) := "1111111110"; -- A difficult one - not corresponding to something in ASCI
 
     constant baud           : integer := 115200;
     constant clk_period     : time := 10 ns;
